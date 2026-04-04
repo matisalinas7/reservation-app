@@ -44,7 +44,7 @@ public class ReservationServiceImpl implements ReservationService{
     }
 
     @Transactional
-    public Reservation cancelReservation(Long id) {
+    public void cancelReservation(Long id) {
         Reservation reservation = reservationRepository
                 .findById(id)
                 .orElseThrow(() -> new BusinessRuleViolationException(
@@ -56,6 +56,5 @@ public class ReservationServiceImpl implements ReservationService{
         }
 
         reservation.setStatus(ReservationStatus.CANCELLED);
-        return reservationRepository.save(reservation);
     }
 }
