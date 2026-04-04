@@ -1,0 +1,63 @@
+<section class="reservation-form" aria-labelledby="reservation-form-title">
+  <div class="reservation-form__header">
+    <a routerLink="/" class="back-link">← Volver al listado</a>
+    <h1 id="reservation-form-title">Nueva reserva</h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <div class="field">
+      <label for="nombreCliente">Nombre del cliente</label>
+      <input
+        id="nombreCliente"
+        type="text"
+        formControlName="nombreCliente"
+        autocomplete="name"
+        maxlength="100"
+        [attr.aria-invalid]="campoInvalido('nombreCliente')"
+      />
+      @if (campoInvalido('nombreCliente')) {
+        <span class="field__error" role="alert">Este campo es obligatorio.</span>
+      }
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="fecha">Fecha</label>
+        <input id="fecha" type="date" formControlName="fecha" [attr.aria-invalid]="campoInvalido('fecha')" />
+        @if (campoInvalido('fecha')) {
+          <span class="field__error" role="alert">Indica una fecha.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="hora">Hora</label>
+        <input id="hora" type="time" formControlName="hora" [attr.aria-invalid]="campoInvalido('hora')" />
+        @if (campoInvalido('hora')) {
+          <span class="field__error" role="alert">Indica una hora.</span>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="servicio">Servicio</label>
+      <select id="servicio" formControlName="servicio" [attr.aria-invalid]="campoInvalido('servicio')">
+        <option value="" disabled>Selecciona un servicio</option>
+        @for (s of servicios; track s) {
+          <option [value]="s">{{ s }}</option>
+        }
+      </select>
+      @if (campoInvalido('servicio')) {
+        <span class="field__error" role="alert">Debes elegir un servicio.</span>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        @if (submitting()) {
+          Guardando…
+        } @else {
+          Guardar reserva
+        }
+      </button>
+    </div>
+  </form>
+</section>

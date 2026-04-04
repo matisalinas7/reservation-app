@@ -1,0 +1,66 @@
+<section class="reservation-list" aria-labelledby="reservation-list-title">
+  <header class="reservation-list__header">
+    <h1 id="reservation-list-title">Reservas</h1>
+    <a routerLink="/nueva" class="btn-new">Nueva reserva</a>
+  </header>
+
+  @if (loading()) {
+    <p class="state state--loading" role="status">Cargando reservas…</p>
+  }
+
+  @if (error(); as errMsg) {
+    <p class="state state--error" role="alert">{{ errMsg }}</p>
+  }
+
+  @if (!loading() && reservations().length === 0 && !error()) {
+    <p class="state state--empty">No hay reservas registradas.</p>
+  }
+
+  @if (!loading() && reservations().length > 0) {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Hora</th>
+            <th scope="col">Servicio</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of reservations(); track r.id) {
+            <tr>
+              <td>{{ r.id }}</td>
+              <td>{{ r.customerName }}</td>
+              <td>{{ r.date }}</td>
+              <td>{{ r.time }}</td>
+              <td>{{ r.service }}</td>
+              <td>
+                <span class="badge" [class.badge--active]="r.status === ReservationStatus.ACTIVE" [class.badge--cancelled]="r.status === ReservationStatus.CANCELLED" [class.badge--completed]="r.status === ReservationStatus.COMPLETED">
+                  {{ r.status }}
+                </span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  class="btn-cancel"
+                  [disabled]="!puedeCancelar(r) || cancellingId() === r.id"
+                  (click)="cancelar(r)"
+                >
+                  @if (cancellingId() === r.id) {
+                    Cancelando…
+                  } @else {
+                    Cancelar
+                  }
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
