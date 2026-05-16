@@ -62,3 +62,60 @@ App disponible en `http://localhost:4200`
 - Filtros y paginación en el listado
 - Tests unitarios e integración
 - Servicios dinámicos desde la API
+
+## Diagrama de clases
+
+```mermaid
+classDiagram
+    class Base {
+        +Long id
+    }
+
+    class Usuario {
+        +String nombre
+        +String apellido
+        +String email
+        +String contrasenia
+    }
+
+    class Reserva {
+        +ReservationStatus estado
+    }
+
+    class Turno {
+        +LocalDate fecha
+        +LocalTime horaInicio
+        +LocalTime horaFin
+    }
+
+    class Servicio {
+        +String nombre
+        +String descripcion
+        +Integer duracion
+    }
+
+    class Horario {
+        +DayOfWeek diaSemana
+        +LocalTime horaInicio
+        +LocalTime horaFin
+    }
+
+    class Categoria {
+        +String nombre
+        +String descripcion
+    }
+
+    Base <|-- Usuario
+    Base <|-- Reserva
+    Base <|-- Turno
+    Base <|-- Servicio
+    Base <|-- Horario
+    Base <|-- Categoria
+
+    Usuario "1" --> "0..*" Reserva
+    Reserva "1" --> "1" Turno
+    Reserva "0..*" --> "1" Servicio
+    Turno "0..*" --> "1" Horario
+    Servicio "1" --> "0..*" Horario
+    Categoria "1" --> "0..*" Servicio
+```
