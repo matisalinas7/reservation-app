@@ -1,4 +1,4 @@
-package com.devsenior.msal.reservation.entity;
+package com.devsenior.msal.reservation.enums;
 
 public enum ReservationStatus {
     ACTIVE,
