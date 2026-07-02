@@ -11,6 +11,9 @@ public class BusinessRuleViolationException extends RuntimeException {
         this.httpStatus = httpStatus;
     }
 
+    public BusinessRuleViolationException(String message) {
+    }
+
     public HttpStatus getHttpStatus() {
         return httpStatus;
     }
