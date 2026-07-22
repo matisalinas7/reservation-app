@@ -1,8 +1,9 @@
 package com.devsenior.msal.reservation.service;
 
+import com.devsenior.msal.reservation.dto.request.CategoriaRequestDTO;
+import com.devsenior.msal.reservation.dto.response.CategoriaResponseDTO;
 import com.devsenior.msal.reservation.entity.Categoria;
 import com.devsenior.msal.reservation.entity.Reserva;
-import com.devsenior.msal.reservation.entity.Servicio;
 import com.devsenior.msal.reservation.enums.ReservationStatus;
 import com.devsenior.msal.reservation.exception.BusinessRuleViolationException;
 import com.devsenior.msal.reservation.repository.CategoriaRepository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class CategoriaServiceImpl implements CategoriaService {
@@ -28,30 +30,39 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Categoria crearCategoria(Categoria categoria) {
-        return categoriaRepository.save(categoria);
+    public CategoriaResponseDTO crearCategoria(CategoriaRequestDTO request) {
+        Categoria categoria = new Categoria();
+        categoria.setNombre(request.nombre());
+        categoria.setDescripcion(request.descripcion());
+
+        Categoria categoriaGuardada = categoriaRepository.save(categoria);
+
+        return CategoriaResponseDTO.from(categoriaGuardada);
     }
 
     @Override
-    public Categoria actualizarCategoria(Long id, Categoria categoria) {
-        Categoria categoriaExistente = findCategoriaById(id);
-        categoriaExistente.setNombre(categoria.getNombre());
-        categoriaExistente.setDescripcion(categoria.getDescripcion());
-        return categoriaRepository.save(categoriaExistente);
+    public CategoriaResponseDTO actualizarCategoria(Long id, CategoriaRequestDTO request) {
+        Categoria categoriaExistente = buscarCategoriaPorId(id);
+
+        categoriaExistente.setNombre(request.nombre());
+        categoriaExistente.setDescripcion(request.descripcion());
+
+        Categoria categoriaActualizada = categoriaRepository.save(categoriaExistente);
+
+        return CategoriaResponseDTO.from(categoriaActualizada);
     }
 
     @Transactional
     @Override
     public void eliminarCategoria(Long id) {
-        Categoria categoriaElegida = findCategoriaById(id);
+        Categoria categoriaElegida = buscarCategoriaPorId(id);
         if (categoriaElegida.getFechaBaja() != null) {
             throw new BusinessRuleViolationException(
                     "Esta categoría ya está dada de baja",
                     HttpStatus.CONFLICT);
-        } else {
-            categoriaElegida.setFechaBaja(LocalDateTime.now());
-            categoriaRepository.save(categoriaElegida);
         }
+        categoriaElegida.setFechaBaja(LocalDateTime.now());
+        categoriaRepository.save(categoriaElegida);
 
         List<Reserva> reservasAfectadas = reservaRepository
                 .findByServicio_CategoriaAndEstadoAndTurno_FechaAfter(
@@ -65,7 +76,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     public void reactivarCategoria(Long id) {
-        Categoria categoriaElegida = findCategoriaById(id);
+        Categoria categoriaElegida = buscarCategoriaPorId(id);
         if (categoriaElegida.getFechaBaja() == null) {
             throw new BusinessRuleViolationException(
                     "Esta categoría está activa, no se puede reactivar.",
@@ -76,20 +87,31 @@ public class CategoriaServiceImpl implements CategoriaService {
     }
 
     @Override
-    public Categoria findCategoriaById(Long id) {
+    public CategoriaResponseDTO findCategoriaById(Long id) {
+        return CategoriaResponseDTO.from(buscarCategoriaPorId(id));
+    }
+
+    @Override
+    public List<CategoriaResponseDTO> findAllCategorias() {
+        return categoriaRepository.findAll()
+                .stream()
+                .map(CategoriaResponseDTO::from)
+                .toList();
+
+    }
+
+    @Override
+    public List<CategoriaResponseDTO> findCategoriasDisponibles() {
+        return categoriaRepository.findByFechaBajaIsNull()
+                .stream()
+                .map(CategoriaResponseDTO::from)
+                .toList();
+    }
+
+    private Categoria buscarCategoriaPorId(Long id) {
         return categoriaRepository.findById(id)
                 .orElseThrow(() -> new BusinessRuleViolationException(
                         "Categoría no encontrada con id: " + id,
                         HttpStatus.NOT_FOUND));
-    }
-
-    @Override
-    public List<Categoria> findAllCategorias() {
-        return categoriaRepository.findAll();
-    }
-
-    @Override
-    public List<Categoria> findCategoriasDisponibles() {
-        return categoriaRepository.findByFechaBajaIsNull();
     }
 }

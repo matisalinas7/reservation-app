@@ -1,5 +1,6 @@
 package com.devsenior.msal.reservation.exception;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 public class BusinessRuleViolationException extends RuntimeException {
@@ -9,9 +10,6 @@ public class BusinessRuleViolationException extends RuntimeException {
     public BusinessRuleViolationException(String message, HttpStatus httpStatus) {
         super(message);
         this.httpStatus = httpStatus;
-    }
-
-    public BusinessRuleViolationException(String message) {
     }
 
     public HttpStatus getHttpStatus() {
