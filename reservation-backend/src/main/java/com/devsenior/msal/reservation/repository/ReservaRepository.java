@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
@@ -27,4 +28,6 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             ReservationStatus estado,
             LocalDate fecha
     );
+
+    Optional<Reserva> findByTurnoAndEstado(Turno turno, ReservationStatus estado);
 }
