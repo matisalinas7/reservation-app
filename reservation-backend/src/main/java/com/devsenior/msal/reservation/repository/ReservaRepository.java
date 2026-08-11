@@ -1,12 +1,9 @@
 package com.devsenior.msal.reservation.repository;
 
-import com.devsenior.msal.reservation.entity.Categoria;
-import com.devsenior.msal.reservation.entity.Horario;
-import com.devsenior.msal.reservation.entity.Turno;
+import com.devsenior.msal.reservation.entity.*;
 import com.devsenior.msal.reservation.enums.ReservationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.devsenior.msal.reservation.entity.Reserva;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -30,4 +27,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     );
 
     Optional<Reserva> findByTurnoAndEstado(Turno turno, ReservationStatus estado);
+
+    List<Reserva> findByUsuarioAndEstadoAndTurno_FechaAfter(
+            Usuario usuario,
+            ReservationStatus estado,
+            LocalDate fecha
+    );
 }
