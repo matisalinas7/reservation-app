@@ -33,4 +33,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             ReservationStatus estado,
             LocalDate fecha
     );
+
+    List<Reserva> findByUsuario_Id(Long usuarioId);
+
+    boolean existsByTurnoAndEstado(Turno turno, ReservationStatus reservationStatus);
+
+    List<Reserva> findByEstadoAndTurno_FechaBefore(ReservationStatus estado, LocalDate fecha);
 }

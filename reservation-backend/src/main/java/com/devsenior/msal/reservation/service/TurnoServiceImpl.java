@@ -40,6 +40,12 @@ public class TurnoServiceImpl implements TurnoService {
                         "Horario no encontrado con id: " + request.horarioId(),
                         HttpStatus.NOT_FOUND));
 
+        if (turnoRepository.existsByHorarioAndFecha(horario, request.fecha())) {
+            throw new BusinessRuleViolationException(
+                    "Ya existen turnos generados para este horario y fecha.",
+                    HttpStatus.CONFLICT);
+        }
+
         Integer duracion = horario.getServicio().getDuracion();
         LocalTime horaActual = horario.getHoraInicio();
         List<Turno> turnos = new ArrayList<>();
@@ -53,6 +59,7 @@ public class TurnoServiceImpl implements TurnoService {
                 turnos.add(turno);
                 horaActual = horaActual.plusMinutes(duracion);
         }
+
         return turnoRepository.saveAll(turnos)
                 .stream()
                 .map(TurnoResponseDTO::from)
