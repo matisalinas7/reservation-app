@@ -8,8 +8,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
-
-@EnableJpaAuditing
 @EnableScheduling
 @SpringBootApplication
 public class ReservationBackendApplication {
@@ -22,7 +20,6 @@ public class ReservationBackendApplication {
     @PostConstruct
     public void init() {
         TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-        System.out.println("TimeZone configurado: " + TimeZone.getDefault().getID());
     }
 
 }
