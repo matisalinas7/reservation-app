@@ -11,6 +11,7 @@ import com.devsenior.msal.reservation.repository.ReservaRepository;
 import com.devsenior.msal.reservation.repository.UsuarioRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,10 +23,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setNombre(request.nombre());
         usuario.setApellido(request.apellido());
         usuario.setMail(request.mail());
-        usuario.setContrasenia(request.contrasenia());
+        usuario.setContrasenia(passwordEncoder.encode(request.contrasenia()));
         usuario.setTelefono(request.telefono());
 
         usuario.setRol(Rol.CLIENTE);
