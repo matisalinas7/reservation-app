@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class ServicioController {
 
     private final ServicioService servicioService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ServicioResponseDTO> crearServicio(
             @Valid @RequestBody ServicioRequestDTO servicioRequest) {
@@ -27,6 +29,7 @@ public class ServicioController {
                 .body(servicioService.crearServicio(servicioRequest));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarServicio(
             @PathVariable Long id) {
@@ -34,17 +37,20 @@ public class ServicioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ServicioResponseDTO> actualizarServicio(
             @PathVariable Long id, @Valid @RequestBody ServicioRequestDTO servicioRequest) {
         return ResponseEntity.ok(servicioService.actualizarServicio(id, servicioRequest));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<ServicioResponseDTO>> findAllServicios() {
         return ResponseEntity.ok(servicioService.findAllServicios());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ServicioResponseDTO> findServicioById(
             @PathVariable Long id) {
@@ -56,6 +62,7 @@ public class ServicioController {
         return ResponseEntity.ok(servicioService.findServiciosDisponibles());
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<Void> reactivarServicio(
             @PathVariable Long id) {
@@ -63,6 +70,7 @@ public class ServicioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<ServicioResponseDTO>> findServicioByCategoriaId(
             @PathVariable Long categoriaId) {

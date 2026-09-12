@@ -14,7 +14,9 @@ import com.devsenior.msal.reservation.repository.ReservaRepository;
 import com.devsenior.msal.reservation.repository.ServicioRepository;
 import com.devsenior.msal.reservation.repository.TurnoRepository;
 import com.devsenior.msal.reservation.repository.UsuarioRepository;
+import com.devsenior.msal.reservation.security.UserDetailsImpl;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -88,7 +90,7 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public void cancelarReserva(Long id, MotivoCancelacion motivo) {
+    public void cancelarReserva(Long id, MotivoCancelacion motivo, Authentication authentication) {
 
         Reserva reservaElegida = buscarReservaPorId(id);
 
@@ -98,7 +100,10 @@ public class ReservaServiceImpl implements ReservaService {
                     HttpStatus.CONFLICT);
         }
 
-        if (reservaElegida.getUsuario().getRol() == Rol.CLIENTE) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        Rol rolAutenticado = userDetails.getUsuario().getRol();
+
+        if (rolAutenticado == Rol.CLIENTE) {
             Integer duracionServicio = reservaElegida.getServicio().getDuracion();
 
             ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
@@ -152,6 +157,14 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     public ReservaResponseDTO findReservaById(Long id) {
         return ReservaResponseDTO.from(buscarReservaPorId(id));
+    }
+
+    @Override
+    public List<ReservaResponseDTO> findMisReservas(Long usuarioId) {
+        return reservaRepository.findByUsuario_Id(usuarioId)
+                .stream()
+                .map(ReservaResponseDTO::from)
+                .toList();
     }
 
     private Reserva buscarReservaPorId(Long id) {

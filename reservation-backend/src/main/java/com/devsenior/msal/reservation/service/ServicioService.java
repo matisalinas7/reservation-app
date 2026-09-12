@@ -2,6 +2,7 @@ package com.devsenior.msal.reservation.service;
 
 import com.devsenior.msal.reservation.dto.request.CategoriaRequestDTO;
 import com.devsenior.msal.reservation.dto.request.ServicioRequestDTO;
+import com.devsenior.msal.reservation.dto.response.ReservaResponseDTO;
 import com.devsenior.msal.reservation.dto.response.ServicioResponseDTO;
 
 import java.util.List;

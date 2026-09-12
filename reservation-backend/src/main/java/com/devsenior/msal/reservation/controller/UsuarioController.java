@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLEADO')")
     @PostMapping
     public ResponseEntity<UsuarioResponseDTO> registrarUsuario(
             @Valid @RequestBody UsuarioRequestDTO usuarioRequest) {
@@ -29,6 +31,7 @@ public class UsuarioController {
                 .body(usuarioService.registrarUsuario(usuarioRequest));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarUsuario(
             @PathVariable Long id){
@@ -36,6 +39,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLEADO')")
     @PutMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> actualizarUsuario(
             @PathVariable Long id,
@@ -43,6 +47,7 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.actualizarUsuario(id, usuarioRequest));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<Void> reactivarUsuario(
             @PathVariable Long id){
@@ -50,6 +55,7 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/rol")
     public ResponseEntity<Void> actualizarRol(
             @PathVariable Long id,
@@ -58,17 +64,20 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<UsuarioResponseDTO> findUsuarioById(
             @PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.findUsuarioById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UsuarioResponseDTO>> findAllUsuarios() {
         return ResponseEntity.ok(usuarioService.findAllUsuarios());
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLEADO')")
     @GetMapping("/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> findAllUsuariosActivos() {
         return ResponseEntity.ok(usuarioService.findAllUsuariosActivos());

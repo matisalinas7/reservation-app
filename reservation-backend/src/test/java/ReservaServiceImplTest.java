@@ -8,12 +8,14 @@ import com.devsenior.msal.reservation.repository.ReservaRepository;
 import com.devsenior.msal.reservation.repository.ServicioRepository;
 import com.devsenior.msal.reservation.repository.TurnoRepository;
 import com.devsenior.msal.reservation.repository.UsuarioRepository;
+import com.devsenior.msal.reservation.security.UserDetailsImpl;
 import com.devsenior.msal.reservation.service.ReservaServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,6 +25,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -201,15 +204,20 @@ class ReservaServiceImplTest {
     void cancelarReserva_reservaYaCancelada_lanzaBusinessRuleViolationException() {
 
         // ARRANGE
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setRol(Rol.CLIENTE);
+
         Reserva reserva = new Reserva();
         reserva.setId(1L);
         reserva.setEstado(ReservationStatus.CANCELLED);
+
 
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
         // ACT & ASSERT
         assertThrows(BusinessRuleViolationException.class,
-                () -> reservaService.cancelarReserva(1L, null));
+                () -> reservaService.cancelarReserva(1L, null, mock(Authentication.class)));
 
     }
 
@@ -242,10 +250,13 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
+        Authentication authentication = mock(Authentication.class);
+        UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
         // ACT & ASSERT
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, authentication));
     }
 
     @Test
@@ -276,9 +287,12 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
+        Authentication authentication = mock(Authentication.class);
+        UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, authentication));
     }
 
     @Test
@@ -309,10 +323,13 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
+        Authentication authentication = mock(Authentication.class);
+        UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
 
         // ACT & ASSERT
-        assertDoesNotThrow(() -> reservaService.cancelarReserva(1L, null));
+        assertDoesNotThrow(() -> reservaService.cancelarReserva(1L, null, authentication));
     }
 }

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -21,6 +22,7 @@ public class TurnoController {
 
     private final TurnoService turnoService;
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<List<TurnoResponseDTO>> generarTurno(
             @Valid @RequestBody TurnoRequestDTO turnoRequest) {
@@ -28,6 +30,7 @@ public class TurnoController {
                 .body(turnoService.generarTurno(turnoRequest));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarTurno(
             @PathVariable Long id) {
@@ -35,6 +38,7 @@ public class TurnoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}/reactivar")
     public ResponseEntity<Void> reactivarTurno(
             @PathVariable Long id) {
@@ -42,12 +46,14 @@ public class TurnoController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<TurnoResponseDTO> findTurnoById(
             @PathVariable Long id) {
         return ResponseEntity.ok(turnoService.findTurnoById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<TurnoResponseDTO>> findAllTurnos() {
         return ResponseEntity.ok(turnoService.findAllTurnos());
@@ -58,6 +64,7 @@ public class TurnoController {
         return ResponseEntity.ok(turnoService.findTurnosDisponibles());
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/servicio/{servicioId}")
     public ResponseEntity<List<TurnoResponseDTO>> findTurnosByServicioAndFecha(
             @PathVariable Long servicioId, @RequestParam LocalDate fecha) {
