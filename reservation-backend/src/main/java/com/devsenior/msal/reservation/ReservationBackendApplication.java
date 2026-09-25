@@ -15,6 +15,7 @@ public class ReservationBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(ReservationBackendApplication.class, args);
         System.out.println("Reservation Backend Application started");
+        org.flywaydb.core.Flyway prueba;
 	}
 
     @PostConstruct
