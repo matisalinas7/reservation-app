@@ -1,0 +1,106 @@
+<section class="admin-page" aria-labelledby="horarios-title">
+  <header class="admin-page__header">
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
+    <h1 id="horarios-title">Horarios</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <h2>{{ editingId() === null ? 'Nuevo horario' : 'Editar horario' }}</h2>
+
+    <div class="field">
+      <label for="servicioId">Servicio</label>
+      <select id="servicioId" formControlName="servicioId">
+        <option [ngValue]="0" disabled>Seleccioná un servicio</option>
+        @for (s of serviciosActivos(); track s.id) {
+          <option [ngValue]="s.id">{{ s.nombre }}</option>
+        }
+      </select>
+      @if (campoInvalido('servicioId')) {
+        <span class="field__error" role="alert">Elegí un servicio.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="diaSemana">Día de la semana</label>
+      <select id="diaSemana" formControlName="diaSemana">
+        <option value="" disabled>Seleccioná un día</option>
+        @for (d of dias; track d.value) {
+          <option [value]="d.value">{{ d.label }}</option>
+        }
+      </select>
+      @if (campoInvalido('diaSemana')) {
+        <span class="field__error" role="alert">Elegí un día.</span>
+      }
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label for="horaInicio">Hora de inicio</label>
+        <input id="horaInicio" type="time" formControlName="horaInicio" />
+        @if (campoInvalido('horaInicio')) {
+          <span class="field__error" role="alert">Indicá una hora.</span>
+        }
+      </div>
+      <div class="field">
+        <label for="horaFin">Hora de fin</label>
+        <input id="horaFin" type="time" formControlName="horaFin" />
+        @if (campoInvalido('horaFin')) {
+          <span class="field__error" role="alert">Indicá una hora.</span>
+        }
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        {{ editingId() === null ? 'Crear' : 'Guardar cambios' }}
+      </button>
+      @if (editingId() !== null) {
+        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+      }
+    </div>
+  </form>
+
+  @if (loading()) {
+    <p class="state" role="status">Cargando horarios…</p>
+  } @else if (horarios().length === 0) {
+    <p class="state">No hay horarios registrados.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Servicio</th>
+            <th scope="col">Día</th>
+            <th scope="col">Horario</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (h of horarios(); track h.id) {
+            <tr>
+              <td>{{ nombreServicio(h.servicioId) }}</td>
+              <td>{{ diaLabel(h.diaSemana) }}</td>
+              <td>{{ hhmm(h.horaInicio) }} – {{ hhmm(h.horaFin) }}</td>
+              <td>
+                <span class="badge" [class.badge--baja]="h.fechaBaja">
+                  {{ h.fechaBaja ? 'Dado de baja' : 'Activo' }}
+                </span>
+              </td>
+              <td class="row-actions">
+                <button type="button" class="btn-link" (click)="editar(h)">Editar</button>
+                @if (h.fechaBaja) {
+                  <button type="button" class="btn-link" (click)="reactivar(h)">Reactivar</button>
+                } @else {
+                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(h)">
+                    Dar de baja
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

@@ -1,0 +1,77 @@
+<section class="admin-page" aria-labelledby="categorias-title">
+  <header class="admin-page__header">
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
+    <h1 id="categorias-title">Categorías</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <h2>{{ editingId() === null ? 'Nueva categoría' : 'Editar categoría' }}</h2>
+
+    <div class="field">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" type="text" formControlName="nombre" maxlength="100" />
+      @if (campoInvalido('nombre')) {
+        <span class="field__error" role="alert">Este campo es obligatorio.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="descripcion">Descripción</label>
+      <input id="descripcion" type="text" formControlName="descripcion" maxlength="255" />
+      @if (campoInvalido('descripcion')) {
+        <span class="field__error" role="alert">Este campo es obligatorio.</span>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        {{ editingId() === null ? 'Crear' : 'Guardar cambios' }}
+      </button>
+      @if (editingId() !== null) {
+        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+      }
+    </div>
+  </form>
+
+  @if (loading()) {
+    <p class="state" role="status">Cargando categorías…</p>
+  } @else if (categorias().length === 0) {
+    <p class="state">No hay categorías registradas.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Descripción</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of categorias(); track c.id) {
+            <tr>
+              <td>{{ c.nombre }}</td>
+              <td>{{ c.descripcion }}</td>
+              <td>
+                <span class="badge" [class.badge--baja]="c.fechaBaja">
+                  {{ c.fechaBaja ? 'Dada de baja' : 'Activa' }}
+                </span>
+              </td>
+              <td class="row-actions">
+                <button type="button" class="btn-link" (click)="editar(c)">Editar</button>
+                @if (c.fechaBaja) {
+                  <button type="button" class="btn-link" (click)="reactivar(c)">Reactivar</button>
+                } @else {
+                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(c)">
+                    Dar de baja
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

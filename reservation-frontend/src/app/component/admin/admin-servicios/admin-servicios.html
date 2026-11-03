@@ -1,0 +1,100 @@
+<section class="admin-page" aria-labelledby="servicios-title">
+  <header class="admin-page__header">
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
+    <h1 id="servicios-title">Servicios</h1>
+  </header>
+
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    <h2>{{ editingId() === null ? 'Nuevo servicio' : 'Editar servicio' }}</h2>
+
+    <div class="field">
+      <label for="nombre">Nombre</label>
+      <input id="nombre" type="text" formControlName="nombre" maxlength="100" />
+      @if (campoInvalido('nombre')) {
+        <span class="field__error" role="alert">Este campo es obligatorio.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="descripcion">Descripción</label>
+      <input id="descripcion" type="text" formControlName="descripcion" maxlength="255" />
+      @if (campoInvalido('descripcion')) {
+        <span class="field__error" role="alert">Este campo es obligatorio.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="duracion">Duración (minutos)</label>
+      <input id="duracion" type="number" formControlName="duracion" min="1" />
+      @if (campoInvalido('duracion')) {
+        <span class="field__error" role="alert">La duración debe ser de al menos 1 minuto.</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="categoriaId">Categoría</label>
+      <select id="categoriaId" formControlName="categoriaId">
+        <option [ngValue]="0" disabled>Seleccioná una categoría</option>
+        @for (c of categoriasActivas(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }}</option>
+        }
+      </select>
+      @if (campoInvalido('categoriaId')) {
+        <span class="field__error" role="alert">Elegí una categoría.</span>
+      }
+    </div>
+
+    <div class="actions">
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        {{ editingId() === null ? 'Crear' : 'Guardar cambios' }}
+      </button>
+      @if (editingId() !== null) {
+        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+      }
+    </div>
+  </form>
+
+  @if (loading()) {
+    <p class="state" role="status">Cargando servicios…</p>
+  } @else if (servicios().length === 0) {
+    <p class="state">No hay servicios registrados.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Duración</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of servicios(); track s.id) {
+            <tr>
+              <td>{{ s.nombre }}</td>
+              <td>{{ nombreCategoria(s.categoriaId) }}</td>
+              <td>{{ s.duracion }} min</td>
+              <td>
+                <span class="badge" [class.badge--baja]="s.fechaBaja">
+                  {{ s.fechaBaja ? 'Dado de baja' : 'Activo' }}
+                </span>
+              </td>
+              <td class="row-actions">
+                <button type="button" class="btn-link" (click)="editar(s)">Editar</button>
+                @if (s.fechaBaja) {
+                  <button type="button" class="btn-link" (click)="reactivar(s)">Reactivar</button>
+                } @else {
+                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(s)">
+                    Dar de baja
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>

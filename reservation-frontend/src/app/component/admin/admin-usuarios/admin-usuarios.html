@@ -1,0 +1,63 @@
+<section class="admin-page" aria-labelledby="usuarios-title">
+  <header class="admin-page__header">
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
+    <h1 id="usuarios-title">Usuarios</h1>
+  </header>
+
+  @if (loading()) {
+    <p class="state" role="status">Cargando usuarios…</p>
+  } @else if (usuarios().length === 0) {
+    <p class="state">No hay usuarios registrados.</p>
+  } @else {
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Mail</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of usuarios(); track u.id) {
+            <tr>
+              <td>{{ u.nombre }} {{ u.apellido }}</td>
+              <td>{{ u.mail }}</td>
+              <td>{{ u.telefono || '—' }}</td>
+              <td>
+                <select
+                  [attr.aria-label]="'Rol de ' + u.mail"
+                  [disabled]="esUsuarioActual(u)"
+                  (change)="cambiarRol(u, $event)"
+                >
+                  @for (r of roles; track r) {
+                    <option [value]="r" [selected]="r === u.rol">{{ r }}</option>
+                  }
+                </select>
+              </td>
+              <td>
+                <span class="badge" [class.badge--baja]="u.fechaBaja">
+                  {{ u.fechaBaja ? 'Dado de baja' : 'Activo' }}
+                </span>
+              </td>
+              <td class="row-actions">
+                @if (esUsuarioActual(u)) {
+                  <span>(vos)</span>
+                } @else if (u.fechaBaja) {
+                  <button type="button" class="btn-link" (click)="reactivar(u)">Reactivar</button>
+                } @else {
+                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(u)">
+                    Dar de baja
+                  </button>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
