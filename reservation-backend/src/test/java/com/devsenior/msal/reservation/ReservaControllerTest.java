@@ -12,6 +12,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -33,6 +36,7 @@ class ReservaControllerTest {
         // ARRANGE
         ReservaResponseDTO response = new ReservaResponseDTO(
                 1L, 1L, 1L, 1L,
+                "Corte", LocalDate.now(), LocalTime.of(10, 0), LocalTime.of(10, 30),
                 ReservationStatus.ACTIVE,
                 null,
                 null
