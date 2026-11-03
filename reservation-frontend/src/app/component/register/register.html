@@ -1,0 +1,91 @@
+<section class="auth-shell" aria-labelledby="register-title">
+  <div class="auth-card">
+    <div class="auth-card__header">
+      <span class="auth-badge">Crear cuenta</span>
+      <h1 id="register-title">Registrate</h1>
+      <p class="auth-subtitle">Completá tus datos para reservar tus servicios favoritos.</p>
+    </div>
+
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="register()" novalidate>
+      <div class="field">
+        <label for="nombre">Nombre</label>
+        <input
+          id="nombre"
+          type="text"
+          formControlName="nombre"
+          [attr.aria-invalid]="campoInvalido('nombre')"
+        />
+        @if (campoInvalido('nombre')) {
+          <span class="field__error" role="alert">El nombre es obligatorio.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="apellido">Apellido</label>
+        <input
+          id="apellido"
+          type="text"
+          formControlName="apellido"
+          [attr.aria-invalid]="campoInvalido('apellido')"
+        />
+        @if (campoInvalido('apellido')) {
+          <span class="field__error" role="alert">El apellido es obligatorio.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="mail">Email</label>
+        <input
+          id="mail"
+          type="email"
+          formControlName="mail"
+          [attr.aria-invalid]="campoInvalido('mail')"
+        />
+        @if (campoInvalido('mail')) {
+          <span class="field__error" role="alert">Ingresá un email válido.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="contrasenia">Contraseña</label>
+        <input
+          id="contrasenia"
+          type="password"
+          formControlName="contrasenia"
+          [attr.aria-invalid]="campoInvalido('contrasenia')"
+        />
+        @if (campoInvalido('contrasenia')) {
+          <span class="field__error" role="alert"
+            >La contraseña debe tener al menos 8 caracteres.</span
+          >
+        }
+      </div>
+
+      <div class="field">
+        <label for="telefono">Teléfono</label>
+        <input
+          id="telefono"
+          type="tel"
+          formControlName="telefono"
+          [attr.aria-invalid]="campoInvalido('telefono')"
+        />
+        @if (campoInvalido('telefono')) {
+          <span class="field__error" role="alert">El teléfono debe tener formato válido.</span>
+        }
+      </div>
+
+      <button type="submit" class="btn-primary" [disabled]="submitting()">
+        @if (submitting()) {
+          Creando cuenta…
+        } @else {
+          Registrarme
+        }
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Ya tenés cuenta?
+      <a routerLink="/login">Iniciá sesión</a>
+    </p>
+  </div>
+</section>
