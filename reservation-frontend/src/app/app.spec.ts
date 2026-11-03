@@ -1,4 +1,4 @@
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
 import { routes } from './app.routes';
@@ -22,5 +22,11 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should navigate to the register route', async () => {
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/register');
+    expect(router.url).toBe('/register');
   });
 });
