@@ -4,19 +4,26 @@ export enum ReservationStatus {
   COMPLETED = 'COMPLETED',
 }
 
-/** Fecha ISO (yyyy-MM-dd) y hora (HH:mm:ss) según la API del backend. */
+export type MotivoCancelacion = 'CAMBIO_DE_PLANES' | 'EMERGENCIA' | 'ERROR_AL_RESERVAR' | 'OTRO';
+
+/** Espejo de ReservaResponseDTO. fecha: "2026-10-20", horas: "11:00:00" (texto). */
 export interface Reservation {
   id: number;
-  customerName: string;
-  date: string;
-  time: string;
-  service: string;
-  status: ReservationStatus;
+  usuarioId: number;
+  turnoId: number;
+  servicioId: number;
+  servicioNombre: string;
+  fecha: string;
+  horaInicio: string;
+  horaFin: string;
+  estado: ReservationStatus;
+  motivoCancelacion: MotivoCancelacion | null;
+  fechaBaja: string | null;
 }
 
+/** Espejo de ReservaRequestDTO. */
 export interface CreateReservationRequest {
-  customerName: string;
-  date: string;
-  time: string;
-  service: string;
+  usuarioId: number;
+  turnoId: number;
+  servicioId: number;
 }

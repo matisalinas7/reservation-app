@@ -1,28 +1,41 @@
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Reservation, ReservationStatus } from '../model/reservation.model';
+import { AuthService } from '../services/auth.service';
 import { ReservationService } from '../services/reservation.service';
 import { ToastService } from '../services/toast.service';
 import { formatHttpError } from '../utils/http-error.util';
+import { hhmm } from '../utils/horario.util';
 
 @Component({
   selector: 'app-reservation-list',
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   templateUrl: './reservation-list.html',
   styleUrl: './reservation-list.css',
 })
 export class ReservationListComponent implements OnInit {
   private readonly reservationService = inject(ReservationService);
+  private readonly authService = inject(AuthService);
   private readonly toast = inject(ToastService);
+
+  readonly hhmm = hhmm;
+  readonly ReservationStatus = ReservationStatus;
+
+  readonly esStaff = computed(() => this.authService.hasAnyRole('ADMIN', 'EMPLEADO'));
+  readonly puedeReservar = computed(() => this.authService.hasAnyRole('CLIENTE', 'EMPLEADO'));
 
   readonly reservations = signal<Reservation[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly cancellingId = signal<number | null>(null);
 
-  readonly ReservationStatus = ReservationStatus;
+  // Más recientes primero (se ordena una copia para no mutar el signal)
+  readonly ordenadas = computed(() =>
+    [...this.reservations()].sort((a, b) =>
+      (b.fecha + b.horaInicio).localeCompare(a.fecha + a.horaInicio),
+    ),
+  );
 
   ngOnInit(): void {
     this.load();
@@ -31,11 +44,14 @@ export class ReservationListComponent implements OnInit {
   load(): void {
     this.loading.set(true);
     this.error.set(null);
-    this.reservationService.getAll().subscribe({
+    const request$ = this.esStaff()
+      ? this.reservationService.getAll()
+      : this.reservationService.getMisReservas();
+
+    request$.subscribe({
       next: (data) => {
         this.reservations.set(data);
         this.loading.set(false);
-        this.error.set(null);
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
@@ -44,8 +60,12 @@ export class ReservationListComponent implements OnInit {
     });
   }
 
+  puedeCancelar(r: Reservation): boolean {
+    return r.estado === ReservationStatus.ACTIVE;
+  }
+
   cancelar(reservation: Reservation): void {
-    if (reservation.status !== ReservationStatus.ACTIVE) {
+    if (!confirm('¿Cancelar esta reserva?')) {
       return;
     }
     this.cancellingId.set(reservation.id);
@@ -60,9 +80,5 @@ export class ReservationListComponent implements OnInit {
         this.toast.showError(formatHttpError(err));
       },
     });
-  }
-
-  puedeCancelar(r: Reservation): boolean {
-    return r.status === ReservationStatus.ACTIVE;
   }
 }

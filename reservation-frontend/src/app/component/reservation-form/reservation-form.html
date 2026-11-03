@@ -1,61 +1,67 @@
 <section class="reservation-form" aria-labelledby="reservation-form-title">
   <div class="reservation-form__header">
-    <a routerLink="/" class="back-link">← Volver al listado</a>
+    <a routerLink="/" class="back-link">← Volver al inicio</a>
     <h1 id="reservation-form-title">Nueva reserva</h1>
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form [formGroup]="form" (ngSubmit)="reservar()" novalidate>
     <div class="field">
-      <label for="nombreCliente">Nombre del cliente</label>
-      <input
-        id="nombreCliente"
-        type="text"
-        formControlName="nombreCliente"
-        autocomplete="name"
-        maxlength="100"
-        [attr.aria-invalid]="campoInvalido('nombreCliente')"
-      />
-      @if (campoInvalido('nombreCliente')) {
-        <span class="field__error" role="alert">Este campo es obligatorio.</span>
-      }
-    </div>
-
-    <div class="field-row">
-      <div class="field">
-        <label for="fecha">Fecha</label>
-        <input id="fecha" type="date" formControlName="fecha" [attr.aria-invalid]="campoInvalido('fecha')" />
-        @if (campoInvalido('fecha')) {
-          <span class="field__error" role="alert">Indica una fecha.</span>
-        }
-      </div>
-      <div class="field">
-        <label for="hora">Hora</label>
-        <input id="hora" type="time" formControlName="hora" [attr.aria-invalid]="campoInvalido('hora')" />
-        @if (campoInvalido('hora')) {
-          <span class="field__error" role="alert">Indica una hora.</span>
-        }
-      </div>
-    </div>
-
-    <div class="field">
-      <label for="servicio">Servicio</label>
-      <select id="servicio" formControlName="servicio" [attr.aria-invalid]="campoInvalido('servicio')">
-        <option value="" disabled>Selecciona un servicio</option>
-        @for (s of servicios; track s) {
-          <option [value]="s">{{ s }}</option>
+      <label for="categoriaId">Categoría</label>
+      <select id="categoriaId" formControlName="categoriaId">
+        <option [ngValue]="0" disabled>Seleccioná una categoría</option>
+        @for (c of categorias(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }}</option>
         }
       </select>
-      @if (campoInvalido('servicio')) {
-        <span class="field__error" role="alert">Debes elegir un servicio.</span>
+    </div>
+
+    <div class="field">
+      <label for="servicioId">Servicio</label>
+      <select id="servicioId" formControlName="servicioId">
+        <option [ngValue]="0" disabled>
+          {{ servicios().length === 0 ? 'Elegí primero una categoría' : 'Seleccioná un servicio' }}
+        </option>
+        @for (s of servicios(); track s.id) {
+          <option [ngValue]="s.id">{{ s.nombre }} ({{ s.duracion }} min)</option>
+        }
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="fecha">Fecha</label>
+      <input id="fecha" type="date" formControlName="fecha" [min]="hoy" />
+    </div>
+
+    <div class="field">
+      <span class="label">Turnos disponibles</span>
+      @if (loadingTurnos()) {
+        <p class="state" role="status">Buscando turnos…</p>
+      } @else if (!buscado()) {
+        <p class="state">Elegí servicio y fecha para ver los horarios.</p>
+      } @else if (turnos().length === 0) {
+        <p class="state">No hay turnos disponibles para esa fecha.</p>
+      } @else {
+        <div class="turnos">
+          @for (t of turnos(); track t.id) {
+            <button
+              type="button"
+              class="turno"
+              [class.turno--selected]="turnoSeleccionado()?.id === t.id"
+              (click)="turnoSeleccionado.set(t)"
+            >
+              {{ hhmm(t.horaInicio) }}
+            </button>
+          }
+        </div>
       }
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn-primary" [disabled]="!turnoSeleccionado() || submitting()">
         @if (submitting()) {
-          Guardando…
+          Reservando…
         } @else {
-          Guardar reserva
+          Confirmar reserva
         }
       </button>
     </div>
