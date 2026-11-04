@@ -1,21 +1,27 @@
-<header class="app-header" *ngIf="isAuthenticated()">
-  <div class="app-header__content">
-    <div class="app-header__brand">
-      <strong>Reservation App</strong>
-      <nav class="app-header__nav" aria-label="Navegación principal">
-        <a routerLink="/">Inicio</a>
-        <a routerLink="/reservas">Reservas</a>
-        <a routerLink="/nueva">Nueva reserva</a>
-        <span class="admin-indicator" *ngIf="isAdmin()">ADMIN</span>
-      </nav>
+@if (isAuthenticated()) {
+  <header class="app-header">
+    <div class="app-header__content">
+      <div class="app-header__brand">
+        <strong>Reservation App</strong>
+        <nav class="app-header__nav" aria-label="Navegación principal">
+          <a routerLink="/">Inicio</a>
+          <a routerLink="/reservas">{{ esCliente() ? 'Mis reservas' : 'Reservas' }}</a>
+          @if (puedeReservar()) {
+            <a routerLink="/nueva">Nueva reserva</a>
+          }
+          @if (esAdmin()) {
+            <a routerLink="/admin">Administración</a>
+          }
+        </nav>
+      </div>
+      <div class="app-header__user">
+        <span>{{ currentUser()?.mail }}</span>
+        <span class="user-role">{{ rolLabel() }}</span>
+        <button type="button" class="btn-logout" (click)="logout()">Cerrar sesión</button>
+      </div>
     </div>
-    <div class="app-header__user">
-      <span>{{ currentUser()?.mail }}</span>
-      <span class="user-role" *ngIf="isAdmin()">Administrador</span>
-      <button type="button" class="btn-logout" (click)="logout()">Cerrar sesión</button>
-    </div>
-  </div>
-</header>
+  </header>
+}
 
 <app-toast />
 <router-outlet />

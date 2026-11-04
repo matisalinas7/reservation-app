@@ -6,10 +6,6 @@ export const guestGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
-    return true;
-  }
-
-  void router.navigate(['/']);
-  return false;
+  // Con sesión iniciada, login y register no tienen sentido: va al inicio
+  return authService.isAuthenticated() ? router.createUrlTree(['/']) : true;
 };

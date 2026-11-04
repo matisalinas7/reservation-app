@@ -2,58 +2,55 @@
   <div class="dashboard__hero">
     <div>
       <p class="eyebrow">Bienvenido</p>
-      <h1 id="dashboard-title">Hola, {{ currentUser()?.mail || 'usuario' }}</h1>
-      @if (isAdmin()) {
-        <p class="subtitle">
+      <h1 id="dashboard-title">Hola, {{ currentUser()?.mail }}</h1>
+      <p class="subtitle">
+        @if (esAdmin()) {
           Panel administrativo: gestioná usuarios, servicios, turnos, horarios y categorías.
-        </p>
-      } @else {
-        <p class="subtitle">Gestioná tus reservas y consultá los servicios disponibles.</p>
-      }
+        } @else if (esEmpleado()) {
+          Consultá las reservas y cargá turnos para clientes que llegan al local.
+        } @else {
+          Gestioná tus reservas y sacá turnos nuevos.
+        }
+      </p>
     </div>
-    <span class="role-badge">{{ currentUser()?.rol || 'CLIENTE' }}</span>
+    <span class="role-badge">{{ rolLabel() }}</span>
   </div>
 
   <div class="dashboard__grid">
     <article class="panel panel--primary">
-      <h2>Reservas</h2>
-      @if (isAdmin()) {
-        <p>Supervisá reservas del sistema y validá el flujo operativo general.</p>
-      } @else {
-        <p>Revisá el estado de tus turnos y cancelá las que ya no necesites.</p>
-      }
+      <h2>{{ esStaff() ? 'Reservas' : 'Mis reservas' }}</h2>
+      <p>
+        @if (esStaff()) {
+          Revisá todas las reservas del sistema y cancelá las que haga falta.
+        } @else {
+          Revisá el estado de tus turnos y cancelá los que ya no necesites.
+        }
+      </p>
       <a routerLink="/reservas" class="btn-primary">Ir a reservas</a>
     </article>
 
-    <article class="panel panel--secondary">
-      <h2>Nueva reserva</h2>
-      @if (isAdmin()) {
-        <p>Creá nuevas reservas como soporte operativo para clientes y empleados.</p>
-      } @else {
-        <p>Elegí servicio, fecha y horario para sacar un turno nuevo.</p>
-      }
-      <a routerLink="/nueva" class="btn-secondary">Crear reserva</a>
-    </article>
+    @if (puedeReservar()) {
+      <article class="panel panel--secondary">
+        <h2>Nueva reserva</h2>
+        <p>
+          @if (esEmpleado()) {
+            Cargá un turno a nombre de un cliente presencial.
+          } @else {
+            Elegí servicio, fecha y horario para sacar un turno.
+          }
+        </p>
+        <a routerLink="/nueva" class="btn-secondary">Crear reserva</a>
+      </article>
+    }
   </div>
 
-  @if (isAdmin()) {
+  @if (esAdmin()) {
     <section class="panel panel--list">
       <h2>Acciones de administrador</h2>
       <ul class="quick-links">
         @for (item of adminQuickLinks; track item.path) {
           <li>
             <a [routerLink]="item.path" class="admin-action">{{ item.label }}</a>
-          </li>
-        }
-      </ul>
-    </section>
-  } @else {
-    <section class="panel panel--list">
-      <h2>Accesos rápidos</h2>
-      <ul class="quick-links">
-        @for (link of quickLinks; track link.path) {
-          <li>
-            <a [routerLink]="link.path">{{ link.label }}</a>
           </li>
         }
       </ul>

@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { rolLabel } from '../../utils/rol.util';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,12 +13,12 @@ export class DashboardComponent {
   private readonly authService = inject(AuthService);
 
   readonly currentUser = this.authService.currentUser;
-  readonly isAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
 
-  readonly quickLinks = [
-    { label: 'Ver reservas', path: '/reservas' },
-    { label: 'Nueva reserva', path: '/nueva' },
-  ];
+  readonly esAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
+  readonly esEmpleado = computed(() => this.authService.hasAnyRole('EMPLEADO'));
+  readonly esStaff = computed(() => this.authService.hasAnyRole('ADMIN', 'EMPLEADO'));
+  readonly puedeReservar = computed(() => this.authService.hasAnyRole('CLIENTE', 'EMPLEADO'));
+  readonly rolLabel = computed(() => rolLabel(this.currentUser()?.rol));
 
   readonly adminQuickLinks = [
     { label: 'Gestionar categorías', path: '/admin/categorias' },
