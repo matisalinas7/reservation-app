@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,11 +25,13 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Clock clock;
 
-    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, PasswordEncoder passwordEncoder) {
+    public UsuarioServiceImpl(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, PasswordEncoder passwordEncoder, Clock clock) {
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
         this.passwordEncoder = passwordEncoder;
+        this.clock = clock;
     }
 
     @Override
@@ -74,7 +77,7 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .findByUsuarioAndEstadoAndTurno_FechaAfter(
                         usuarioElegido,
                         ReservationStatus.ACTIVE,
-                        LocalDate.now()
+                        LocalDate.now(clock)
                 );
         reservasAfectadas.forEach(reserva -> reserva.setEstado(ReservationStatus.CANCELLED));
         reservaRepository.saveAll(reservasAfectadas);

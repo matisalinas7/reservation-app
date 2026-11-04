@@ -14,6 +14,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,11 +25,13 @@ public class HorarioServiceImpl implements HorarioService {
     private HorarioRepository horarioRepository;
     private ServicioRepository servicioRepository;
     private ReservaRepository reservaRepository;
+    private Clock clock;
 
-    public HorarioServiceImpl(HorarioRepository horarioRepository, ServicioRepository servicioRepository,  ReservaRepository reservaRepository) {
+    public HorarioServiceImpl(HorarioRepository horarioRepository, ServicioRepository servicioRepository,  ReservaRepository reservaRepository, Clock clock) {
         this.horarioRepository = horarioRepository;
         this.servicioRepository = servicioRepository;
         this.reservaRepository = reservaRepository;
+        this.clock = clock;
     }
 
     @Override
@@ -80,7 +83,7 @@ public class HorarioServiceImpl implements HorarioService {
                 .findByTurno_HorarioAndEstadoAndTurno_FechaAfter(
                         horarioElegido,
                         ReservationStatus.ACTIVE,
-                        LocalDate.now()
+                        LocalDate.now(clock)
                 );
         reservasAfectadas.forEach(reserva -> reserva.setEstado(ReservationStatus.CANCELLED));
         reservaRepository.saveAll(reservasAfectadas);

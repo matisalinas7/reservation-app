@@ -29,12 +29,14 @@ public class ReservaServiceImpl implements ReservaService {
     private UsuarioRepository  usuarioRepository;
     private TurnoRepository turnoRepository;
     private ServicioRepository servicioRepository;
+    private Clock clock;
 
-    public ReservaServiceImpl(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository, TurnoRepository turnoRepository, ServicioRepository servicioRepository) {
+    public ReservaServiceImpl(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository, TurnoRepository turnoRepository, ServicioRepository servicioRepository, Clock clock) {
         this.reservaRepository = reservaRepository;
         this.usuarioRepository = usuarioRepository;
         this.turnoRepository = turnoRepository;
         this.servicioRepository = servicioRepository;
+        this.clock = clock;
     }
 
     @Override
@@ -79,12 +81,9 @@ public class ReservaServiceImpl implements ReservaService {
                     HttpStatus.CONFLICT);
             }
 
-        ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
-        Instant ahora = Instant.now();
-        Instant inicioTurno = LocalDateTime.of(
-                turno.getFecha(),
-                turno.getHoraInicio()
-        ).atZone(zonaArgentina).toInstant();
+        // Fecha y hora del turno son hora local de Argentina, igual que el clock
+        LocalDateTime ahora = LocalDateTime.now(clock);
+        LocalDateTime inicioTurno = LocalDateTime.of(turno.getFecha(), turno.getHoraInicio());
 
         if (ahora.isAfter(inicioTurno)) {
             throw new BusinessRuleViolationException(
@@ -118,19 +117,11 @@ public class ReservaServiceImpl implements ReservaService {
         if (rolAutenticado == Rol.CLIENTE) {
             Integer duracionServicio = reservaElegida.getServicio().getDuracion();
 
-            ZoneId zonaArgentina = ZoneId.of("America/Argentina/Buenos_Aires");
-            Instant ahora = Instant.now();
-            Instant inicioTurno = LocalDateTime.of(
+            LocalDateTime ahora = LocalDateTime.now(clock);
+            LocalDateTime inicioTurno = LocalDateTime.of(
                     reservaElegida.getTurno().getFecha(),
-                    reservaElegida.getTurno().getHoraInicio()
-            ).atZone(zonaArgentina).toInstant();
-
-
-            Instant limiteCancelacion = inicioTurno.minusSeconds(duracionServicio * 60L);
-
-            System.out.println("Ahora: " + ahora);
-            System.out.println("Inicio turno: " + inicioTurno);
-            System.out.println("Limite cancelacion: " + limiteCancelacion);
+                    reservaElegida.getTurno().getHoraInicio());
+            LocalDateTime limiteCancelacion = inicioTurno.minusMinutes(duracionServicio);
 
             if (ahora.isAfter(inicioTurno)) {
                 throw new BusinessRuleViolationException(

@@ -1,3 +1,4 @@
+import com.devsenior.msal.reservation.config.ClockConfig;
 import com.devsenior.msal.reservation.dto.request.ReservaRequestDTO;
 import com.devsenior.msal.reservation.dto.response.ReservaResponseDTO;
 import com.devsenior.msal.reservation.entity.*;
@@ -10,19 +11,18 @@ import com.devsenior.msal.reservation.repository.TurnoRepository;
 import com.devsenior.msal.reservation.repository.UsuarioRepository;
 import com.devsenior.msal.reservation.security.UserDetailsImpl;
 import com.devsenior.msal.reservation.service.ReservaServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,8 +46,18 @@ class ReservaServiceImplTest {
     @Mock
     private ServicioRepository servicioRepository;
 
-    @InjectMocks
+    // Reloj fijo en hora de Argentina: los tests no dependen de la hora ni del huso de la máquina
+    private final Clock clock = Clock.fixed(
+            LocalDateTime.of(2026, 11, 3, 15, 0).atZone(ClockConfig.ZONA_ARGENTINA).toInstant(),
+            ClockConfig.ZONA_ARGENTINA);
+
     private ReservaServiceImpl reservaService;
+
+    @BeforeEach
+    void setUp() {
+        reservaService = new ReservaServiceImpl(
+                reservaRepository, usuarioRepository, turnoRepository, servicioRepository, clock);
+    }
 
     // Crear reserva
     @Test
@@ -70,7 +80,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().plusDays(1));
+        turno.setFecha(LocalDate.now(clock).plusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -116,7 +126,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().plusDays(1));
+        turno.setFecha(LocalDate.now(clock).plusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -149,7 +159,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().minusDays(1));
+        turno.setFecha(LocalDate.now(clock).minusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -183,7 +193,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(2L);
-        turno.setFecha(LocalDate.now().plusDays(1));
+        turno.setFecha(LocalDate.now(clock).plusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -277,7 +287,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().minusDays(1));
+        turno.setFecha(LocalDate.now(clock).minusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -312,8 +322,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        // Misma zona que usa el servicio, para que el test no dependa del huso horario de la máquina
-        LocalDateTime inicio = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")).plusMinutes(10);
+        LocalDateTime inicio = LocalDateTime.now(clock).plusMinutes(10);
         turno.setFecha(inicio.toLocalDate());
         turno.setHoraInicio(inicio.toLocalTime()); // empieza en 10 min
         turno.setHoraFin(inicio.toLocalTime().plusMinutes(30));
@@ -348,7 +357,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().minusDays(1));
+        turno.setFecha(LocalDate.now(clock).minusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -379,7 +388,7 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now().plusDays(1));
+        turno.setFecha(LocalDate.now(clock).plusDays(1));
         turno.setHoraInicio(LocalTime.of(10, 0));
         turno.setHoraFin(LocalTime.of(10, 30));
         turno.setHorario(horario);
@@ -448,5 +457,48 @@ class ReservaServiceImplTest {
         // ASSERT
         assertEquals(ReservationStatus.CANCELLED, reserva.getEstado());
         verify(reservaRepository).save(reserva);
+    }
+
+    // Ventana de cancelación: el cliente puede cancelar hasta (inicio del turno - duración del servicio)
+    private Reserva reservaQueEmpiezaEn(Usuario duenio, int minutos, int duracionServicio) {
+        Reserva reserva = reservaActivaDe(duenio);
+        reserva.getServicio().setDuracion(duracionServicio);
+        LocalDateTime inicio = LocalDateTime.now(clock).plusMinutes(minutos);
+        reserva.getTurno().setFecha(inicio.toLocalDate());
+        reserva.getTurno().setHoraInicio(inicio.toLocalTime());
+        reserva.getTurno().setHoraFin(inicio.toLocalTime().plusMinutes(duracionServicio));
+        return reserva;
+    }
+
+    @Test
+    void cancelarReserva_turnoEnUnaHoraServicioDe30Min_dentroDeVentana_cancela() {
+
+        // ARRANGE
+        Usuario cliente = usuarioCon(1L, Rol.CLIENTE);
+        Reserva reserva = reservaQueEmpiezaEn(cliente, 60, 30);
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
+
+        // ACT
+        reservaService.cancelarReserva(1L, null, new UserDetailsImpl(cliente));
+
+        // ASSERT
+        assertEquals(ReservationStatus.CANCELLED, reserva.getEstado());
+    }
+
+    @Test
+    void cancelarReserva_turnoEnUnaHoraServicioDe90Min_fueraDeVentana_lanzaConflict() {
+
+        // ARRANGE
+        Usuario cliente = usuarioCon(1L, Rol.CLIENTE);
+        Reserva reserva = reservaQueEmpiezaEn(cliente, 60, 90);
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
+
+        // ACT & ASSERT
+        BusinessRuleViolationException ex = assertThrows(BusinessRuleViolationException.class,
+                () -> reservaService.cancelarReserva(1L, null, new UserDetailsImpl(cliente)));
+        assertEquals(HttpStatus.CONFLICT, ex.getHttpStatus());
+        assertEquals(ReservationStatus.ACTIVE, reserva.getEstado());
     }
 }

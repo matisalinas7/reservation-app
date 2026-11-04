@@ -12,6 +12,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -22,11 +23,14 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final ReservaRepository reservaRepository;
+    private final Clock clock;
 
     public CategoriaServiceImpl(CategoriaRepository categoriaRepository,
-                                ReservaRepository reservaRepository) {
+                                ReservaRepository reservaRepository,
+                                Clock clock) {
         this.categoriaRepository = categoriaRepository;
         this.reservaRepository = reservaRepository;
+        this.clock = clock;
     }
 
     @Override
@@ -68,7 +72,7 @@ public class CategoriaServiceImpl implements CategoriaService {
                 .findByServicio_CategoriaAndEstadoAndTurno_FechaAfter(
                         categoriaElegida,
                         ReservationStatus.ACTIVE,
-                        LocalDate.now()
+                        LocalDate.now(clock)
                 );
         reservasAfectadas.forEach(reserva -> reserva.setEstado(ReservationStatus.CANCELLED));
         reservaRepository.saveAll(reservasAfectadas);
