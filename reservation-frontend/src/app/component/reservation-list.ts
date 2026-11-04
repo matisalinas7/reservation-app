@@ -1,7 +1,12 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Reservation, ReservationStatus } from '../model/reservation.model';
+import {
+  MOTIVOS_CANCELACION,
+  MotivoCancelacion,
+  Reservation,
+  ReservationStatus,
+} from '../model/reservation.model';
 import { AuthService } from '../services/auth.service';
 import { ReservationService } from '../services/reservation.service';
 import { ToastService } from '../services/toast.service';
@@ -21,6 +26,7 @@ export class ReservationListComponent implements OnInit {
 
   readonly hhmm = hhmm;
   readonly ReservationStatus = ReservationStatus;
+  readonly MOTIVOS = MOTIVOS_CANCELACION;
 
   readonly esStaff = computed(() => this.authService.hasAnyRole('ADMIN', 'EMPLEADO'));
   readonly puedeReservar = computed(() => this.authService.hasAnyRole('CLIENTE', 'EMPLEADO'));
@@ -28,6 +34,12 @@ export class ReservationListComponent implements OnInit {
   readonly reservations = signal<Reservation[]>([]);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+
+  /** Fila que muestra el select de motivo (null = ninguna). */
+  readonly confirmandoId = signal<number | null>(null);
+  /** Motivo elegido en la fila que se está confirmando. */
+  readonly motivo = signal<MotivoCancelacion | null>(null);
+  /** Fila con el request de cancelación en curso. */
   readonly cancellingId = signal<number | null>(null);
 
   // Más recientes primero (se ordena una copia para no mutar el signal)
@@ -64,20 +76,46 @@ export class ReservationListComponent implements OnInit {
     return r.estado === ReservationStatus.ACTIVE;
   }
 
-  cancelar(reservation: Reservation): void {
-    if (!confirm('¿Cancelar esta reserva?')) {
-      return;
+  etiquetaMotivo(valor: MotivoCancelacion): string {
+    return this.MOTIVOS.find((m) => m.valor === valor)?.etiqueta ?? valor;
+  }
+
+  /** Abre la confirmación en la fila. Si había otra abierta, la reemplaza. */
+  iniciarCancelacion(r: Reservation): void {
+    this.confirmandoId.set(r.id);
+    this.motivo.set(null);
+  }
+
+  volver(): void {
+    this.confirmandoId.set(null);
+    this.motivo.set(null);
+  }
+
+  onMotivoChange(event: Event): void {
+    // El value de un <select> siempre es string; las opciones salen de MOTIVOS, por eso el cast es seguro
+    const valor = (event.target as HTMLSelectElement).value;
+    this.motivo.set(valor ? (valor as MotivoCancelacion) : null);
+  }
+
+  confirmarCancelacion(r: Reservation): void {
+    const motivo = this.motivo();
+    if (!motivo) {
+      return; // el botón ya está deshabilitado, esto es una red de seguridad
     }
-    this.cancellingId.set(reservation.id);
-    this.reservationService.cancelar(reservation.id).subscribe({
+    this.cancellingId.set(r.id);
+    this.reservationService.cancelar(r.id, motivo).subscribe({
       next: () => {
         this.cancellingId.set(null);
+        this.volver();
         this.toast.showSuccess('Reserva cancelada correctamente.');
         this.load();
       },
       error: (err: HttpErrorResponse) => {
         this.cancellingId.set(null);
+        this.volver();
         this.toast.showError(formatHttpError(err));
+        // Un 409 puede significar que el estado cambió (ej: ya cancelada): recargamos para mostrar lo real
+        this.load();
       },
     });
   }

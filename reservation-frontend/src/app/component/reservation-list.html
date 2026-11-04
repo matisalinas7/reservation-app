@@ -51,20 +51,54 @@
                 >
                   {{ r.estado }}
                 </span>
+                @if (r.motivoCancelacion; as m) {
+                  <small class="motivo">{{ etiquetaMotivo(m) }}</small>
+                }
               </td>
               <td>
-                <button
-                  type="button"
-                  class="btn-cancel"
-                  [disabled]="!puedeCancelar(r) || cancellingId() === r.id"
-                  (click)="cancelar(r)"
-                >
-                  @if (cancellingId() === r.id) {
-                    Cancelando…
-                  } @else {
+                @if (confirmandoId() === r.id) {
+                  <div class="cancel-confirm">
+                    <select
+                      aria-label="Motivo de cancelación"
+                      [disabled]="cancellingId() === r.id"
+                      (change)="onMotivoChange($event)"
+                    >
+                      <option value="" [selected]="motivo() === null">Elegí un motivo…</option>
+                      @for (m of MOTIVOS; track m.valor) {
+                        <option [value]="m.valor">{{ m.etiqueta }}</option>
+                      }
+                    </select>
+                    <button
+                      type="button"
+                      class="btn-cancel"
+                      [disabled]="!motivo() || cancellingId() === r.id"
+                      (click)="confirmarCancelacion(r)"
+                    >
+                      @if (cancellingId() === r.id) {
+                        Cancelando…
+                      } @else {
+                        Confirmar
+                      }
+                    </button>
+                    <button
+                      type="button"
+                      class="btn-secondary"
+                      [disabled]="cancellingId() === r.id"
+                      (click)="volver()"
+                    >
+                      Volver
+                    </button>
+                  </div>
+                } @else {
+                  <button
+                    type="button"
+                    class="btn-cancel"
+                    [disabled]="!puedeCancelar(r) || cancellingId() !== null"
+                    (click)="iniciarCancelacion(r)"
+                  >
                     Cancelar
-                  }
-                </button>
+                  </button>
+                }
               </td>
             </tr>
           }

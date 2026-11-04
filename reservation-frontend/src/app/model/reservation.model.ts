@@ -27,3 +27,11 @@ export interface CreateReservationRequest {
   turnoId: number;
   servicioId: number;
 }
+
+/** Valores del enum del backend + texto para mostrar. Fuente única para selects y etiquetas. */
+export const MOTIVOS_CANCELACION: readonly { valor: MotivoCancelacion; etiqueta: string }[] = [
+  { valor: 'CAMBIO_DE_PLANES', etiqueta: 'Cambio de planes' },
+  { valor: 'EMERGENCIA', etiqueta: 'Emergencia' },
+  { valor: 'ERROR_AL_RESERVAR', etiqueta: 'Error al reservar' },
+  { valor: 'OTRO', etiqueta: 'Otro' },
+];
