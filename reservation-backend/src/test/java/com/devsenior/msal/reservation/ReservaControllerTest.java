@@ -55,7 +55,7 @@ class ReservaControllerTest {
 
         // ARRANGE
         ReservaResponseDTO response = new ReservaResponseDTO(
-                1L, 1L, 1L, 1L,
+                1L, 1L, "Juan Doe", "juandoe@gmail.com", 1L, 1L,
                 "Corte", LocalDate.now(), LocalTime.of(10, 0), LocalTime.of(10, 30),
                 ReservationStatus.ACTIVE,
                 null,

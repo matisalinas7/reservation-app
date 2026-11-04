@@ -11,6 +11,8 @@ import java.time.LocalTime;
 public record ReservaResponseDTO(
         Long id,
         Long usuarioId,
+        String usuarioNombre,
+        String usuarioMail,
         Long turnoId,
         Long servicioId,
         String servicioNombre,
@@ -25,6 +27,8 @@ public record ReservaResponseDTO(
         return new  ReservaResponseDTO(
                 reserva.getId(),
                 reserva.getUsuario().getId(),
+                reserva.getUsuario().getNombre() + " " + reserva.getUsuario().getApellido(),
+                reserva.getUsuario().getMail(),
                 reserva.getTurno().getId(),
                 reserva.getServicio().getId(),
                 reserva.getServicio().getNombre(),
