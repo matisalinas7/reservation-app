@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,17 +29,18 @@ public class ReservaController {
     @PreAuthorize("hasAnyRole('CLIENTE','EMPLEADO')")
     @PostMapping
     public ResponseEntity<ReservaResponseDTO> crearReserva(
-            @Valid @RequestBody ReservaRequestDTO reservaRequest) {
+            @Valid @RequestBody ReservaRequestDTO reservaRequest,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(reservaService.crearReserva(reservaRequest));
+                .body(reservaService.crearReserva(reservaRequest, userDetails));
     }
 
     @PreAuthorize("isAuthenticated()")
     @PutMapping("/{id}")
     public ResponseEntity<Void> cancelarReserva(
             @PathVariable Long id, @Valid @RequestBody(required = false) CancelarReservaRequestDTO request,
-            Authentication authentication) {
-        reservaService.cancelarReserva(id, request != null ? request.motivo() : null, authentication);
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        reservaService.cancelarReserva(id, request != null ? request.motivo() : null, userDetails);
         return ResponseEntity.noContent().build();
     }
 
@@ -66,7 +68,8 @@ public class ReservaController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{id}")
     public ResponseEntity<ReservaResponseDTO> findReservaById(
-            @PathVariable Long id) {
-        return ResponseEntity.ok(reservaService.findReservaById(id));
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(reservaService.findReservaById(id, userDetails));
     }
 }

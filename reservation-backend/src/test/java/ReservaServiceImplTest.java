@@ -15,9 +15,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
@@ -25,7 +27,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -92,7 +95,7 @@ class ReservaServiceImplTest {
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reservaGuardada);
 
         // ACT
-        ReservaResponseDTO resultado = reservaService.crearReserva(request);
+        ReservaResponseDTO resultado = reservaService.crearReserva(request, new UserDetailsImpl(usuario));
 
         // ASSERT
         assertNotNull(resultado);
@@ -130,7 +133,7 @@ class ReservaServiceImplTest {
         when(reservaRepository.existsByTurnoAndEstado(turno, ReservationStatus.ACTIVE)).thenReturn(true);
 
         // ACT & ASSERT
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request, new UserDetailsImpl(usuario)));
     }
 
     @Test
@@ -162,7 +165,7 @@ class ReservaServiceImplTest {
         when(turnoRepository.findById(1L)).thenReturn(Optional.of(turno));
 
         // ACT & ASSERT
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request, new UserDetailsImpl(usuario)));
     }
 
     @Test
@@ -196,7 +199,43 @@ class ReservaServiceImplTest {
         when(turnoRepository.findById(1L)).thenReturn(Optional.of(turno));
 
         // ACT & ASSERT
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.crearReserva(request, new UserDetailsImpl(usuario)));
+    }
+
+    @Test
+    void crearReserva_clienteReservaParaOtroUsuario_lanzaAccessDeniedException() {
+
+        // ARRANGE
+        Usuario cliente = new Usuario();
+        cliente.setId(1L);
+        cliente.setRol(Rol.CLIENTE);
+
+        ReservaRequestDTO request = new ReservaRequestDTO(2L, 1L, 1L);
+
+        // ACT & ASSERT
+        assertThrows(AccessDeniedException.class,
+                () -> reservaService.crearReserva(request, new UserDetailsImpl(cliente)));
+    }
+
+    @Test
+    void crearReserva_empleadoReservaParaUsuarioNoCliente_lanzaBusinessRuleViolationException() {
+
+        // ARRANGE
+        Usuario empleado = new Usuario();
+        empleado.setId(1L);
+        empleado.setRol(Rol.EMPLEADO);
+
+        Usuario admin = new Usuario();
+        admin.setId(2L);
+        admin.setRol(Rol.ADMIN);
+
+        ReservaRequestDTO request = new ReservaRequestDTO(2L, 1L, 1L);
+
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(admin));
+
+        // ACT & ASSERT
+        assertThrows(BusinessRuleViolationException.class,
+                () -> reservaService.crearReserva(request, new UserDetailsImpl(empleado)));
     }
 
     // Cancelar reserva
@@ -211,13 +250,13 @@ class ReservaServiceImplTest {
         Reserva reserva = new Reserva();
         reserva.setId(1L);
         reserva.setEstado(ReservationStatus.CANCELLED);
-
+        reserva.setUsuario(usuario);
 
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
         // ACT & ASSERT
         assertThrows(BusinessRuleViolationException.class,
-                () -> reservaService.cancelarReserva(1L, null, mock(Authentication.class)));
+                () -> reservaService.cancelarReserva(1L, null, new UserDetailsImpl(usuario)));
 
     }
 
@@ -250,13 +289,11 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
-        Authentication authentication = mock(Authentication.class);
         UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
         // ACT & ASSERT
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, authentication));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, userDetails));
     }
 
     @Test
@@ -275,9 +312,11 @@ class ReservaServiceImplTest {
 
         Turno turno = new Turno();
         turno.setId(1L);
-        turno.setFecha(LocalDate.now());
-        turno.setHoraInicio(LocalTime.now(ZoneOffset.UTC).plusMinutes(10)); // empieza en 10 min
-        turno.setHoraFin(LocalTime.now(ZoneOffset.UTC).plusMinutes(40));
+        // Misma zona que usa el servicio, para que el test no dependa del huso horario de la máquina
+        LocalDateTime inicio = LocalDateTime.now(ZoneId.of("America/Argentina/Buenos_Aires")).plusMinutes(10);
+        turno.setFecha(inicio.toLocalDate());
+        turno.setHoraInicio(inicio.toLocalTime()); // empieza en 10 min
+        turno.setHoraFin(inicio.toLocalTime().plusMinutes(30));
         turno.setHorario(horario);
 
         Reserva reserva = new Reserva();
@@ -287,12 +326,10 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
-        Authentication authentication = mock(Authentication.class);
         UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
 
-        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, authentication));
+        assertThrows(BusinessRuleViolationException.class, () -> reservaService.cancelarReserva(1L, null, userDetails));
     }
 
     @Test
@@ -323,13 +360,93 @@ class ReservaServiceImplTest {
         reserva.setTurno(turno);
         reserva.setServicio(servicio);
 
-        Authentication authentication = mock(Authentication.class);
         UserDetailsImpl userDetails = new UserDetailsImpl(usuario);
-        when(authentication.getPrincipal()).thenReturn(userDetails);
         when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
         when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
 
         // ACT & ASSERT
-        assertDoesNotThrow(() -> reservaService.cancelarReserva(1L, null, authentication));
+        assertDoesNotThrow(() -> reservaService.cancelarReserva(1L, null, userDetails));
+    }
+
+    // Acceso a reservas ajenas
+    private Reserva reservaActivaDe(Usuario duenio) {
+        Servicio servicio = new Servicio();
+        servicio.setId(1L);
+        servicio.setDuracion(30);
+
+        Horario horario = new Horario();
+        horario.setServicio(servicio);
+
+        Turno turno = new Turno();
+        turno.setId(1L);
+        turno.setFecha(LocalDate.now().plusDays(1));
+        turno.setHoraInicio(LocalTime.of(10, 0));
+        turno.setHoraFin(LocalTime.of(10, 30));
+        turno.setHorario(horario);
+
+        Reserva reserva = new Reserva();
+        reserva.setId(1L);
+        reserva.setEstado(ReservationStatus.ACTIVE);
+        reserva.setUsuario(duenio);
+        reserva.setTurno(turno);
+        reserva.setServicio(servicio);
+        return reserva;
+    }
+
+    private Usuario usuarioCon(Long id, Rol rol) {
+        Usuario usuario = new Usuario();
+        usuario.setId(id);
+        usuario.setRol(rol);
+        return usuario;
+    }
+
+    @Test
+    void cancelarReserva_clienteCancelaReservaAjena_lanzaForbidden() {
+
+        // ARRANGE
+        Reserva reserva = reservaActivaDe(usuarioCon(2L, Rol.CLIENTE));
+        UserDetailsImpl otroCliente = new UserDetailsImpl(usuarioCon(1L, Rol.CLIENTE));
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
+
+        // ACT & ASSERT
+        BusinessRuleViolationException ex = assertThrows(BusinessRuleViolationException.class,
+                () -> reservaService.cancelarReserva(1L, null, otroCliente));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getHttpStatus());
+        assertEquals(ReservationStatus.ACTIVE, reserva.getEstado());
+        verify(reservaRepository, never()).save(any(Reserva.class));
+    }
+
+    @Test
+    void findReservaById_clienteObtieneReservaAjena_lanzaForbidden() {
+
+        // ARRANGE
+        Reserva reserva = reservaActivaDe(usuarioCon(2L, Rol.CLIENTE));
+        UserDetailsImpl otroCliente = new UserDetailsImpl(usuarioCon(1L, Rol.CLIENTE));
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
+
+        // ACT & ASSERT
+        BusinessRuleViolationException ex = assertThrows(BusinessRuleViolationException.class,
+                () -> reservaService.findReservaById(1L, otroCliente));
+        assertEquals(HttpStatus.FORBIDDEN, ex.getHttpStatus());
+    }
+
+    @Test
+    void cancelarReserva_empleadoCancelaReservaDeCliente_cancela() {
+
+        // ARRANGE
+        Reserva reserva = reservaActivaDe(usuarioCon(2L, Rol.CLIENTE));
+        UserDetailsImpl empleado = new UserDetailsImpl(usuarioCon(1L, Rol.EMPLEADO));
+
+        when(reservaRepository.findById(1L)).thenReturn(Optional.of(reserva));
+        when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+
+        // ACT
+        reservaService.cancelarReserva(1L, null, empleado);
+
+        // ASSERT
+        assertEquals(ReservationStatus.CANCELLED, reserva.getEstado());
+        verify(reservaRepository).save(reserva);
     }
 }

@@ -3,7 +3,12 @@ package com.devsenior.msal.reservation;
 import com.devsenior.msal.reservation.controller.ReservaController;
 import com.devsenior.msal.reservation.dto.request.ReservaRequestDTO;
 import com.devsenior.msal.reservation.dto.response.ReservaResponseDTO;
+import com.devsenior.msal.reservation.entity.Usuario;
 import com.devsenior.msal.reservation.enums.ReservationStatus;
+import com.devsenior.msal.reservation.enums.Rol;
+import com.devsenior.msal.reservation.security.JwtService;
+import com.devsenior.msal.reservation.security.UserDetailsImpl;
+import com.devsenior.msal.reservation.security.UserDetailsServiceImpl;
 import com.devsenior.msal.reservation.service.ReservaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +22,7 @@ import java.time.LocalTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -30,6 +36,20 @@ class ReservaControllerTest {
     @MockitoBean
     private ReservaService reservaService;
 
+    // Dependencias del JwtFilter, que el slice de @WebMvcTest carga
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
+    private static UserDetailsImpl cliente() {
+        Usuario usuario = new Usuario();
+        usuario.setId(1L);
+        usuario.setRol(Rol.CLIENTE);
+        return new UserDetailsImpl(usuario);
+    }
+
     @Test
     void crearReserva_requestValido_retorna201() throws Exception {
 
@@ -42,10 +62,11 @@ class ReservaControllerTest {
                 null
         );
 
-        when(reservaService.crearReserva(any(ReservaRequestDTO.class))).thenReturn(response);
+        when(reservaService.crearReserva(any(ReservaRequestDTO.class), any())).thenReturn(response);
 
         // ACT & ASSERT
         mockMvc.perform(post("/reservas")
+                        .with(user(cliente()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -62,6 +83,7 @@ class ReservaControllerTest {
 
         // ACT & ASSERT
         mockMvc.perform(post("/reservas")
+                        .with(user(cliente()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                         {
@@ -79,6 +101,7 @@ class ReservaControllerTest {
 
         // ACT & ASSERT
         mockMvc.perform(post("/reservas")
+                        .with(user(cliente()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                         {
@@ -97,6 +120,7 @@ class ReservaControllerTest {
 
         // ACT & ASSERT
         mockMvc.perform(post("/reservas")
+                        .with(user(cliente()))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                         {

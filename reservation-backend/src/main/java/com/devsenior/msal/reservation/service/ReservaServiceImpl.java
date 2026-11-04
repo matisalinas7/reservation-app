@@ -16,7 +16,7 @@ import com.devsenior.msal.reservation.repository.TurnoRepository;
 import com.devsenior.msal.reservation.repository.UsuarioRepository;
 import com.devsenior.msal.reservation.security.UserDetailsImpl;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.*;
@@ -38,12 +38,24 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public ReservaResponseDTO crearReserva(ReservaRequestDTO request) {
+    public ReservaResponseDTO crearReserva(ReservaRequestDTO request, UserDetailsImpl userDetails) {
+
+        // La identidad sale del token: un CLIENTE solo puede reservar para sí mismo
+        Usuario autenticado = userDetails.getUsuario();
+        if (autenticado.getRol() == Rol.CLIENTE && !autenticado.getId().equals(request.usuarioId())) {
+            throw new AccessDeniedException("Un cliente solo puede crear reservas a su nombre.");
+        }
 
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new BusinessRuleViolationException(
                         "Usuario no encontrado con id: " + request.usuarioId(),
                         HttpStatus.NOT_FOUND));
+
+        if (usuario.getRol() != Rol.CLIENTE) {
+            throw new BusinessRuleViolationException(
+                    "Solo se pueden crear reservas para usuarios con rol CLIENTE.",
+                    HttpStatus.BAD_REQUEST);
+        }
 
         Servicio servicio = servicioRepository.findById(request.servicioId())
                 .orElseThrow(() -> new BusinessRuleViolationException(
@@ -90,9 +102,10 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public void cancelarReserva(Long id, MotivoCancelacion motivo, Authentication authentication) {
+    public void cancelarReserva(Long id, MotivoCancelacion motivo, UserDetailsImpl userDetails) {
 
         Reserva reservaElegida = buscarReservaPorId(id);
+        verificarAcceso(reservaElegida, userDetails);
 
         if (reservaElegida.getEstado() == ReservationStatus.CANCELLED) {
             throw new BusinessRuleViolationException(
@@ -100,7 +113,6 @@ public class ReservaServiceImpl implements ReservaService {
                     HttpStatus.CONFLICT);
         }
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         Rol rolAutenticado = userDetails.getUsuario().getRol();
 
         if (rolAutenticado == Rol.CLIENTE) {
@@ -155,8 +167,10 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    public ReservaResponseDTO findReservaById(Long id) {
-        return ReservaResponseDTO.from(buscarReservaPorId(id));
+    public ReservaResponseDTO findReservaById(Long id, UserDetailsImpl userDetails) {
+        Reserva reserva = buscarReservaPorId(id);
+        verificarAcceso(reserva, userDetails);
+        return ReservaResponseDTO.from(reserva);
     }
 
     @Override
@@ -165,6 +179,17 @@ public class ReservaServiceImpl implements ReservaService {
                 .stream()
                 .map(ReservaResponseDTO::from)
                 .toList();
+    }
+
+    // Un CLIENTE solo ve y cancela sus reservas; para las ajenas responde 403.
+    private void verificarAcceso(Reserva reserva, UserDetailsImpl userDetails) {
+        Usuario autenticado = userDetails.getUsuario();
+        if (autenticado.getRol() == Rol.CLIENTE
+                && !reserva.getUsuario().getId().equals(autenticado.getId())) {
+            throw new BusinessRuleViolationException(
+                    "No tenés acceso a reservas de otro cliente.",
+                    HttpStatus.FORBIDDEN);
+        }
     }
 
     private Reserva buscarReservaPorId(Long id) {
