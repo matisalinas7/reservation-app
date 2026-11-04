@@ -10,6 +10,9 @@ export type MotivoCancelacion = 'CAMBIO_DE_PLANES' | 'EMERGENCIA' | 'ERROR_AL_RE
 export interface Reservation {
   id: number;
   usuarioId: number;
+  /** Nombre y apellido del dueño de la reserva (para la vista de staff). */
+  usuarioNombre: string;
+  usuarioMail: string;
   turnoId: number;
   servicioId: number;
   servicioNombre: string;

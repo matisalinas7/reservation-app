@@ -37,7 +37,10 @@
           @for (r of ordenadas(); track r.id) {
             <tr>
               @if (esStaff()) {
-                <td>#{{ r.usuarioId }}</td>
+                <td>
+                  {{ r.usuarioNombre }}
+                  <small class="usuario-mail">{{ r.usuarioMail }}</small>
+                </td>
               }
               <td>{{ r.servicioNombre }}</td>
               <td>{{ r.fecha }}</td>
