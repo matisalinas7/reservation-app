@@ -1,27 +1,75 @@
 @if (isAuthenticated()) {
-  <header class="app-header">
-    <div class="app-header__content">
-      <div class="app-header__brand">
-        <strong>Reservation App</strong>
+  <header class="app-header" (keydown.escape)="cerrarMenu()">
+    <div class="app-header__bar">
+      <a routerLink="/" class="app-header__brand" (click)="cerrarMenu()">Reservation App</a>
+
+      <button
+        type="button"
+        class="btn btn--ghost app-header__toggle"
+        aria-controls="app-menu"
+        [attr.aria-expanded]="menuAbierto()"
+        (click)="toggleMenu()"
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          @if (menuAbierto()) {
+            <path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          } @else {
+            <path d="M3 6h14M3 10h14M3 14h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          }
+        </svg>
+        Menú
+      </button>
+
+      <div id="app-menu" class="app-header__menu" [class.is-open]="menuAbierto()">
         <nav class="app-header__nav" aria-label="Navegación principal">
-          <a routerLink="/">Inicio</a>
-          <a routerLink="/reservas">{{ esCliente() ? 'Mis reservas' : 'Reservas' }}</a>
+          <a
+            routerLink="/"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: true }"
+            (click)="cerrarMenu()"
+            >Inicio</a
+          >
+          <a
+            routerLink="/reservas"
+            routerLinkActive="is-active"
+            ariaCurrentWhenActive="page"
+            (click)="cerrarMenu()"
+            >{{ esCliente() ? 'Mis reservas' : 'Reservas' }}</a
+          >
           @if (puedeReservar()) {
-            <a routerLink="/nueva">Nueva reserva</a>
+            <a
+              routerLink="/nueva"
+              routerLinkActive="is-active"
+              ariaCurrentWhenActive="page"
+              (click)="cerrarMenu()"
+              >Nueva reserva</a
+            >
           }
           @if (esAdmin()) {
-            <a routerLink="/admin">Administración</a>
+            <a
+              routerLink="/admin"
+              routerLinkActive="is-active"
+              ariaCurrentWhenActive="page"
+              (click)="cerrarMenu()"
+              >Administración</a
+            >
           }
         </nav>
-      </div>
-      <div class="app-header__user">
-        <span>{{ currentUser()?.mail }}</span>
-        <span class="user-role">{{ rolLabel() }}</span>
-        <button type="button" class="btn-logout" (click)="logout()">Cerrar sesión</button>
+
+        <div class="app-header__user">
+          <div class="app-header__who">
+            <span class="app-header__mail" [title]="currentUser()?.mail ?? ''">{{ currentUser()?.mail }}</span>
+            <span class="app-header__role">{{ rolLabel() }}</span>
+          </div>
+          <button type="button" class="btn btn--secondary" (click)="logout()">Cerrar sesión</button>
+        </div>
       </div>
     </div>
   </header>
 }
 
 <app-toast />
-<router-outlet />
+<main>
+  <router-outlet />
+</main>

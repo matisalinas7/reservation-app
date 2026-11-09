@@ -38,3 +38,10 @@ export const MOTIVOS_CANCELACION: readonly { valor: MotivoCancelacion; etiqueta:
   { valor: 'ERROR_AL_RESERVAR', etiqueta: 'Error al reservar' },
   { valor: 'OTRO', etiqueta: 'Otro' },
 ];
+
+/** Estados de la reserva + texto en español. Mismo patrón que MOTIVOS_CANCELACION. */
+export const ESTADOS_RESERVA: readonly { valor: ReservationStatus; etiqueta: string }[] = [
+  { valor: ReservationStatus.ACTIVE, etiqueta: 'Activa' },
+  { valor: ReservationStatus.CANCELLED, etiqueta: 'Cancelada' },
+  { valor: ReservationStatus.COMPLETED, etiqueta: 'Completada' },
+];

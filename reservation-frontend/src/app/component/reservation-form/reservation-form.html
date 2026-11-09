@@ -1,4 +1,4 @@
-<section class="reservation-form" aria-labelledby="reservation-form-title">
+<section class="page reservation-form" aria-labelledby="reservation-form-title">
   <div class="reservation-form__header">
     <a routerLink="/" class="back-link">← Volver al inicio</a>
     <h1 id="reservation-form-title">
@@ -6,7 +6,7 @@
     </h1>
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="reservar()" novalidate>
+  <form class="card reservation-form__form" [formGroup]="form" (ngSubmit)="reservar()" novalidate>
     @if (esEmpleado()) {
       <div class="field">
         <label for="clienteId">Cliente</label>
@@ -51,11 +51,11 @@
     <div class="field">
       <span class="label">Turnos disponibles</span>
       @if (loadingTurnos()) {
-        <p class="state" role="status">Buscando turnos…</p>
+        <p class="state state--loading" role="status">Buscando turnos…</p>
       } @else if (!buscado()) {
-        <p class="state">Elegí servicio y fecha para ver los horarios.</p>
+        <p class="state state--empty">Elegí servicio y fecha para ver los horarios.</p>
       } @else if (turnos().length === 0) {
-        <p class="state">No hay turnos disponibles para esa fecha.</p>
+        <p class="state state--empty">No hay turnos disponibles para esa fecha.</p>
       } @else {
         <div class="turnos">
           @for (t of turnos(); track t.id) {
@@ -75,7 +75,7 @@
     <div class="actions">
       <button
         type="submit"
-        class="btn-primary"
+        class="btn btn--primary"
         [disabled]="!turnoSeleccionado() || submitting() || form.controls.clienteId.invalid"
       >
         @if (submitting()) {

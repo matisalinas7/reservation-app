@@ -1,9 +1,10 @@
 <section class="auth" aria-labelledby="login-title">
   <div class="auth__header">
     <h1 id="login-title">Iniciar sesión</h1>
+    <p class="page__subtitle">Entrá para ver y sacar tus turnos.</p>
   </div>
 
-  <form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <form class="card auth__form" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     <div class="field">
       <label for="mail">Mail</label>
       <input
@@ -33,7 +34,7 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
         @if (submitting()) {
           Ingresando…
         } @else {

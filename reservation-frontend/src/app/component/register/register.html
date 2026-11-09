@@ -1,12 +1,11 @@
-<section class="auth-shell" aria-labelledby="register-title">
-  <div class="auth-card">
-    <div class="auth-card__header">
-      <span class="auth-badge">Crear cuenta</span>
-      <h1 id="register-title">Registrate</h1>
-      <p class="auth-subtitle">Completá tus datos para reservar tus servicios favoritos.</p>
+<section class="auth" aria-labelledby="register-title">
+  <div>
+    <div class="auth__header">
+      <h1 id="register-title">Crear cuenta</h1>
+      <p class="page__subtitle">Completá tus datos para reservar turnos.</p>
     </div>
 
-    <form class="auth-form" [formGroup]="form" (ngSubmit)="register()" novalidate>
+    <form class="card auth__form" [formGroup]="form" (ngSubmit)="register()" novalidate>
       <div class="field">
         <label for="nombre">Nombre</label>
         <input
@@ -74,7 +73,7 @@
         }
       </div>
 
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary btn--block" [disabled]="submitting()">
         @if (submitting()) {
           Creando cuenta…
         } @else {
@@ -83,8 +82,8 @@
       </button>
     </form>
 
-    <p class="auth-footer">
-      Ya tenés cuenta?
+    <p class="auth__switch">
+      ¿Ya tenés cuenta?
       <a routerLink="/login">Iniciá sesión</a>
     </p>
   </div>

@@ -1,9 +1,8 @@
-<section class="dashboard" aria-labelledby="dashboard-title">
+<section class="page dashboard" aria-labelledby="dashboard-title">
   <div class="dashboard__hero">
     <div>
-      <p class="eyebrow">Bienvenido</p>
       <h1 id="dashboard-title">Hola, {{ currentUser()?.mail }}</h1>
-      <p class="subtitle">
+      <p class="page__subtitle">
         @if (esAdmin()) {
           Panel administrativo: gestioná usuarios, servicios, turnos, horarios y categorías.
         } @else if (esEmpleado()) {
@@ -13,11 +12,11 @@
         }
       </p>
     </div>
-    <span class="role-badge">{{ rolLabel() }}</span>
+    <span class="badge">{{ rolLabel() }}</span>
   </div>
 
   <div class="dashboard__grid">
-    <article class="panel panel--primary">
+    <article class="card panel">
       <h2>{{ esStaff() ? 'Reservas' : 'Mis reservas' }}</h2>
       <p>
         @if (esStaff()) {
@@ -26,11 +25,11 @@
           Revisá el estado de tus turnos y cancelá los que ya no necesites.
         }
       </p>
-      <a routerLink="/reservas" class="btn-primary">Ir a reservas</a>
+      <a routerLink="/reservas" class="btn btn--primary">Ir a reservas</a>
     </article>
 
     @if (puedeReservar()) {
-      <article class="panel panel--secondary">
+      <article class="card panel">
         <h2>Nueva reserva</h2>
         <p>
           @if (esEmpleado()) {
@@ -39,18 +38,18 @@
             Elegí servicio, fecha y horario para sacar un turno.
           }
         </p>
-        <a routerLink="/nueva" class="btn-secondary">Crear reserva</a>
+        <a routerLink="/nueva" class="btn btn--secondary">Crear reserva</a>
       </article>
     }
   </div>
 
   @if (esAdmin()) {
-    <section class="panel panel--list">
+    <section class="card panel panel--list">
       <h2>Acciones de administrador</h2>
       <ul class="quick-links">
         @for (item of adminQuickLinks; track item.path) {
           <li>
-            <a [routerLink]="item.path" class="admin-action">{{ item.label }}</a>
+            <a [routerLink]="item.path" class="btn btn--secondary">{{ item.label }}</a>
           </li>
         }
       </ul>

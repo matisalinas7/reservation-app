@@ -1,8 +1,8 @@
-<section class="reservation-list" aria-labelledby="reservation-list-title">
-  <header class="reservation-list__header">
+<section class="page" aria-labelledby="reservation-list-title">
+  <header class="page__header">
     <h1 id="reservation-list-title">{{ esStaff() ? 'Reservas' : 'Mis reservas' }}</h1>
     @if (puedeReservar()) {
-      <a routerLink="/nueva" class="btn-new">Nueva reserva</a>
+      <a routerLink="/nueva" class="btn btn--primary">Nueva reserva</a>
     }
   </header>
 
@@ -20,7 +20,7 @@
 
   @if (!loading() && reservations().length > 0) {
     <div class="table-wrap">
-      <table>
+      <table class="table">
         <thead>
           <tr>
             @if (esStaff()) {
@@ -43,8 +43,8 @@
                 </td>
               }
               <td>{{ r.servicioNombre }}</td>
-              <td>{{ r.fecha }}</td>
-              <td>{{ hhmm(r.horaInicio) }} – {{ hhmm(r.horaFin) }}</td>
+              <td class="num">{{ r.fecha }}</td>
+              <td class="num">{{ hhmm(r.horaInicio) }} – {{ hhmm(r.horaFin) }}</td>
               <td>
                 <span
                   class="badge"
@@ -73,7 +73,7 @@
                     </select>
                     <button
                       type="button"
-                      class="btn-cancel"
+                      class="btn btn--danger"
                       [disabled]="!motivo() || cancellingId() === r.id"
                       (click)="confirmarCancelacion(r)"
                     >
@@ -85,7 +85,7 @@
                     </button>
                     <button
                       type="button"
-                      class="btn-secondary"
+                      class="btn btn--ghost"
                       [disabled]="cancellingId() === r.id"
                       (click)="volver()"
                     >
@@ -95,7 +95,7 @@
                 } @else {
                   <button
                     type="button"
-                    class="btn-cancel"
+                    class="btn btn--secondary"
                     [disabled]="!puedeCancelar(r) || cancellingId() !== null"
                     (click)="iniciarCancelacion(r)"
                   >
