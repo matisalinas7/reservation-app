@@ -335,6 +335,44 @@ textarea:disabled {
   color: var(--danger);
 }
 
+/* ---------- Chips seleccionables (radio nativo oculto dentro del label) ---------- */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--control-height);
+  padding: 0 var(--space-4);
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
+}
+
+.chip:hover {
+  border-color: var(--brand);
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.chip:has(input:checked) {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+  font-weight: 600;
+}
+
 /* ---------- 6. Badge de estado ---------- */
 /* El texto del badge siempre dice el estado: el color nunca es la única señal. */
 .badge {

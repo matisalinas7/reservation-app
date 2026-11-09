@@ -1,29 +1,184 @@
-/* Layout provisorio: el selector de turnos se rediseña en el paso 3. */
-.reservation-form {
-  max-width: 560px;
-}
-
 .reservation-form__header {
   margin-bottom: var(--space-6);
 }
 
-.reservation-form__form {
+.reservation-form__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: var(--space-8);
+}
+
+.reservation-form__steps {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+/* ---- Pasos ---- */
+.paso {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.paso__titulo {
+  display: block;
+  margin-bottom: var(--space-3);
+  padding: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Radios nativos ocultos: el label hace de control. Foco y selección vía :has(). */
+.opcion,
+.dia {
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  transition:
+    background-color var(--transition),
+    border-color var(--transition);
+}
+
+.opcion:hover,
+.dia:hover {
+  border-color: var(--brand);
+}
+
+.opcion:has(input:focus-visible),
+.dia:has(input:focus-visible) {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* ---- Servicio ---- */
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.opcion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  min-height: var(--control-height);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-control);
+}
+
+.opcion__texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.opcion__nombre {
+  font-weight: 600;
+}
+
+.opcion__duracion {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
+}
+
+/* Seleccionado: fondo suave + borde de 2 px (no solo color). */
+.opcion:has(input:checked) {
+  padding: calc(var(--space-3) - 1px) calc(var(--space-4) - 1px);
+  background: var(--brand-soft);
+  border: 2px solid var(--brand);
+}
+
+.opcion:has(input:checked) .opcion__duracion {
+  color: var(--brand);
+}
+
+/* ---- Día: franja horizontal ---- */
+.franja {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.franja__flecha {
+  flex-shrink: 0;
+  width: var(--control-height);
+  padding: 0;
+}
+
+.franja__dias {
+  display: flex;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  padding: var(--space-1) 2px;
+}
+
+.dia {
+  flex: 0 0 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-2) 0;
+  line-height: 1.2;
+  border-radius: var(--radius-container);
+  scroll-snap-align: start;
+}
+
+.dia__semana,
+.dia__mes {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.dia__num {
+  font-size: var(--text-lg);
+  font-weight: 700;
+}
+
+.dia:has(input:checked) {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #fff;
+}
+
+.dia:has(input:checked) span {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ---- Horario ---- */
+.franja-horaria + .franja-horaria {
+  margin-top: var(--space-5);
+}
+
+.franja-horaria__titulo {
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-muted);
 }
 
 .turnos {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
   gap: var(--space-2);
 }
 
 .turno {
   min-height: var(--control-height);
-  min-width: 5rem;
-  padding: 0 var(--space-3);
   font: inherit;
+  font-size: var(--text-md);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--ink);
@@ -43,4 +198,95 @@
   background: var(--brand);
   border-color: var(--brand);
   color: #fff;
+}
+
+/* ---- Resumen ---- */
+.resumen {
+  position: sticky;
+  top: calc(var(--control-height) + var(--space-8));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-container);
+}
+
+.resumen__titulo {
+  font-size: var(--text-lg);
+}
+
+.resumen__datos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.resumen__datos dt {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+
+.resumen__datos dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.resumen__compacto {
+  display: none;
+}
+
+.resumen__confirmar {
+  width: 100%;
+}
+
+/* ---- Celular: una columna y resumen como barra fija abajo ---- */
+@media (max-width: 860px) {
+  .reservation-form__layout {
+    grid-template-columns: 1fr;
+    /* espacio para que la barra fija no tape el último paso */
+    padding-bottom: 6rem;
+  }
+
+  .resumen {
+    position: fixed;
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 5;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-width: 1px 0 0;
+    border-radius: 0;
+  }
+
+  .resumen__titulo,
+  .resumen__datos {
+    display: none;
+  }
+
+  .resumen__compacto {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-sm);
+    line-height: 1.3;
+  }
+
+  .resumen__compacto strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .resumen__confirmar {
+    width: auto;
+    flex-shrink: 0;
+  }
 }

@@ -62,11 +62,11 @@
                 @if (confirmandoId() === r.id) {
                   <div class="cancel-confirm">
                     <select
-                      aria-label="Motivo de cancelación"
+                      aria-label="Motivo de cancelación (opcional)"
                       [disabled]="cancellingId() === r.id"
                       (change)="onMotivoChange($event)"
                     >
-                      <option value="" [selected]="motivo() === null">Elegí un motivo…</option>
+                      <option value="" [selected]="motivo() === null">Prefiero no decirlo</option>
                       @for (m of MOTIVOS; track m.valor) {
                         <option [value]="m.valor">{{ m.etiqueta }}</option>
                       }
@@ -74,7 +74,7 @@
                     <button
                       type="button"
                       class="btn btn--danger"
-                      [disabled]="!motivo() || cancellingId() === r.id"
+                      [disabled]="cancellingId() === r.id"
                       (click)="confirmarCancelacion(r)"
                     >
                       @if (cancellingId() === r.id) {

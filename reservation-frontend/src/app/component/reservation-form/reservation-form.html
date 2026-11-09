@@ -6,76 +6,202 @@
     </h1>
   </div>
 
-  <form class="card reservation-form__form" [formGroup]="form" (ngSubmit)="reservar()" novalidate>
-    @if (esEmpleado()) {
-      <div class="field">
-        <label for="clienteId">Cliente</label>
-        <select id="clienteId" formControlName="clienteId">
-          <option [ngValue]="0" disabled>
-            {{ clientes().length === 0 ? 'No hay clientes activos' : 'Seleccioná un cliente' }}
-          </option>
-          @for (c of clientes(); track c.id) {
-            <option [ngValue]="c.id">{{ c.apellido }}, {{ c.nombre }} — {{ c.mail }}</option>
-          }
-        </select>
-      </div>
-    }
-
-    <div class="field">
-      <label for="categoriaId">Categoría</label>
-      <select id="categoriaId" formControlName="categoriaId">
-        <option [ngValue]="0" disabled>Seleccioná una categoría</option>
-        @for (c of categorias(); track c.id) {
-          <option [ngValue]="c.id">{{ c.nombre }}</option>
-        }
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="servicioId">Servicio</label>
-      <select id="servicioId" formControlName="servicioId">
-        <option [ngValue]="0" disabled>
-          {{ servicios().length === 0 ? 'Elegí primero una categoría' : 'Seleccioná un servicio' }}
-        </option>
-        @for (s of servicios(); track s.id) {
-          <option [ngValue]="s.id">{{ s.nombre }} ({{ s.duracion }} min)</option>
-        }
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="fecha">Fecha</label>
-      <input id="fecha" type="date" formControlName="fecha" [min]="hoy" />
-    </div>
-
-    <div class="field">
-      <span class="label">Turnos disponibles</span>
-      @if (loadingTurnos()) {
-        <p class="state state--loading" role="status">Buscando turnos…</p>
-      } @else if (!buscado()) {
-        <p class="state state--empty">Elegí servicio y fecha para ver los horarios.</p>
-      } @else if (turnos().length === 0) {
-        <p class="state state--empty">No hay turnos disponibles para esa fecha.</p>
-      } @else {
-        <div class="turnos">
-          @for (t of turnos(); track t.id) {
-            <button
-              type="button"
-              class="turno"
-              [class.turno--selected]="turnoSeleccionado()?.id === t.id"
-              (click)="turnoSeleccionado.set(t)"
-            >
-              {{ hhmm(t.horaInicio) }}
-            </button>
-          }
+  <form class="reservation-form__layout" [formGroup]="form" (ngSubmit)="reservar()" novalidate>
+    <div class="reservation-form__steps">
+      <!-- Cliente (solo EMPLEADO) -->
+      @if (esEmpleado()) {
+        <div class="paso field">
+          <label for="clienteId" class="paso__titulo">Cliente</label>
+          <select id="clienteId" formControlName="clienteId">
+            <option [ngValue]="0" disabled>
+              {{ clientes().length === 0 ? 'No hay clientes activos' : 'Seleccioná un cliente' }}
+            </option>
+            @for (c of clientes(); track c.id) {
+              <option [ngValue]="c.id">{{ c.apellido }}, {{ c.nombre }} — {{ c.mail }}</option>
+            }
+          </select>
         </div>
       }
+
+      <!-- Categoría: chips -->
+      <fieldset class="paso">
+        <legend class="paso__titulo">Categoría</legend>
+        @if (categorias().length === 0) {
+          <p class="state state--loading" role="status">Cargando categorías…</p>
+        } @else {
+          <div class="chips">
+            @for (c of categorias(); track c.id) {
+              <label class="chip">
+                <input class="sr-only" type="radio" formControlName="categoriaId" [value]="c.id" />
+                <span>{{ c.nombre }}</span>
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+
+      <!-- Servicio: lista seleccionable con duración -->
+      <fieldset class="paso">
+        <legend class="paso__titulo">Servicio</legend>
+        @if (servicios().length === 0) {
+          <p class="state state--empty">
+            {{ form.controls.categoriaId.value ? 'Esta categoría no tiene servicios disponibles.' : 'Elegí primero una categoría.' }}
+          </p>
+        } @else {
+          <div class="opciones">
+            @for (s of servicios(); track s.id) {
+              <label class="opcion">
+                <input class="sr-only" type="radio" formControlName="servicioId" [value]="s.id" />
+                <span class="opcion__texto">
+                  <span class="opcion__nombre">{{ s.nombre }}</span>
+                  @if (s.descripcion) {
+                    <span class="text-sm muted">{{ s.descripcion }}</span>
+                  }
+                </span>
+                <span class="opcion__duracion num">{{ s.duracion }} min</span>
+              </label>
+            }
+          </div>
+        }
+      </fieldset>
+
+      <!-- Día: franja de 14 días -->
+      <fieldset class="paso">
+        <legend class="paso__titulo">Día</legend>
+        <div class="franja">
+          <button
+            type="button"
+            class="btn btn--secondary franja__flecha"
+            aria-label="Días anteriores"
+            (click)="desplazarDias(franjaDias, -1)"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M12.5 4.5L7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+
+          <div class="franja__dias" #franjaDias>
+            @for (d of dias; track d; let primero = $first) {
+              <label class="dia">
+                <input
+                  class="sr-only"
+                  type="radio"
+                  formControlName="fecha"
+                  [value]="d"
+                  [attr.aria-label]="fechaLarga(d)"
+                />
+                <span class="dia__semana" aria-hidden="true">{{ primero ? 'Hoy' : diaCorto(d) }}</span>
+                <span class="dia__num num" aria-hidden="true">{{ diaDelMes(d) }}</span>
+                <span class="dia__mes" aria-hidden="true">{{ mesCorto(d) }}</span>
+              </label>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="btn btn--secondary franja__flecha"
+            aria-label="Días siguientes"
+            (click)="desplazarDias(franjaDias, 1)"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M7.5 4.5L13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </fieldset>
+
+      <!-- Horario: agrupado en Mañana / Tarde / Noche -->
+      <section class="paso" aria-labelledby="horario-titulo">
+        <h2 id="horario-titulo" class="paso__titulo">Horario</h2>
+        @if (loadingTurnos()) {
+          <p class="state state--loading" role="status">Buscando horarios…</p>
+        } @else if (!buscado()) {
+          <p class="state state--empty">
+            {{ form.controls.servicioId.value ? 'Elegí un día para ver los horarios.' : 'Elegí un servicio y un día para ver los horarios.' }}
+          </p>
+        } @else if (turnos().length === 0) {
+          <div class="state state--empty" role="status">
+            <p>No quedan turnos disponibles el {{ fechaLarga(fecha()).toLowerCase() }}. Probá con otro día.</p>
+            @if (diaSiguiente(); as sig) {
+              <button type="button" class="btn btn--secondary" (click)="elegirDia(sig)">
+                Ver el {{ fechaLarga(sig).toLowerCase() }}
+              </button>
+            }
+          </div>
+        } @else {
+          @for (g of gruposDeTurnos(); track g.nombre) {
+            <div class="franja-horaria">
+              <h3 class="franja-horaria__titulo">{{ g.nombre }}</h3>
+              <div class="turnos">
+                @for (t of g.turnos; track t.id) {
+                  <button
+                    type="button"
+                    class="turno num"
+                    [class.turno--selected]="turnoSeleccionado()?.id === t.id"
+                    [attr.aria-pressed]="turnoSeleccionado()?.id === t.id"
+                    [attr.aria-label]="etiquetaTurno(t)"
+                    (click)="turnoSeleccionado.set(t)"
+                  >
+                    {{ hhmm(t.horaInicio) }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        }
+      </section>
     </div>
 
-    <div class="actions">
+    <!-- Resumen + Confirmar: columna lateral en escritorio, barra fija abajo en el celular -->
+    <aside class="resumen" aria-labelledby="resumen-titulo">
+      <h2 id="resumen-titulo" class="resumen__titulo">Tu reserva</h2>
+
+      <dl class="resumen__datos">
+        <div>
+          <dt>Servicio</dt>
+          <dd>
+            @if (servicioSeleccionado(); as s) {
+              {{ s.nombre }} <span class="muted num">· {{ s.duracion }} min</span>
+            } @else {
+              <span class="muted">Sin elegir</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Fecha</dt>
+          <dd>
+            @if (fecha()) {
+              <time [attr.datetime]="fecha()">{{ fechaLarga(fecha()) }}</time>
+            } @else {
+              <span class="muted">Sin elegir</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Horario</dt>
+          <dd class="num">
+            @if (turnoSeleccionado(); as t) {
+              {{ hhmm(t.horaInicio) }} a {{ hhmm(t.horaFin) }}
+            } @else {
+              <span class="muted">Sin elegir</span>
+            }
+          </dd>
+        </div>
+      </dl>
+
+      <!-- Versión compacta para la barra del celular -->
+      <p class="resumen__compacto">
+        @if (turnoSeleccionado(); as t) {
+          <strong>{{ servicioSeleccionado()?.nombre }}</strong>
+          <span class="num">{{ diaCorto(t.fecha) }} {{ diaDelMes(t.fecha) }} · {{ hhmm(t.horaInicio) }} a {{ hhmm(t.horaFin) }}</span>
+        } @else {
+          <span class="muted">Elegí un horario</span>
+        }
+      </p>
+
       <button
         type="submit"
-        class="btn btn--primary"
+        class="btn btn--primary resumen__confirmar"
         [disabled]="!turnoSeleccionado() || submitting() || form.controls.clienteId.invalid"
       >
         @if (submitting()) {
@@ -84,6 +210,6 @@
           Confirmar reserva
         }
       </button>
-    </div>
+    </aside>
   </form>
 </section>

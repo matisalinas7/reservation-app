@@ -98,10 +98,8 @@ export class ReservationListComponent implements OnInit {
   }
 
   confirmarCancelacion(r: Reservation): void {
+    // El motivo es opcional: null = "Prefiero no decirlo" (el backend lo acepta)
     const motivo = this.motivo();
-    if (!motivo) {
-      return; // el botón ya está deshabilitado, esto es una red de seguridad
-    }
     this.cancellingId.set(r.id);
     this.reservationService.cancelar(r.id, motivo).subscribe({
       next: () => {
