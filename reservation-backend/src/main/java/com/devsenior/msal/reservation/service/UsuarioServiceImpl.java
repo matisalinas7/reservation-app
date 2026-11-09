@@ -1,5 +1,6 @@
 package com.devsenior.msal.reservation.service;
 
+import com.devsenior.msal.reservation.dto.response.ClienteResumenDTO;
 import com.devsenior.msal.reservation.dto.request.UsuarioRequestDTO;
 import com.devsenior.msal.reservation.dto.response.UsuarioResponseDTO;
 import com.devsenior.msal.reservation.entity.Reserva;
@@ -119,6 +120,14 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioRepository.findByFechaBajaIsNull()
                 .stream()
                 .map(UsuarioResponseDTO::from)
+                .toList();
+    }
+
+    @Override
+    public List<ClienteResumenDTO> findClientesActivos() {
+        return usuarioRepository.findByRolAndFechaBajaIsNullOrderByApellidoAscNombreAsc(Rol.CLIENTE)
+                .stream()
+                .map(ClienteResumenDTO::from)
                 .toList();
     }
 

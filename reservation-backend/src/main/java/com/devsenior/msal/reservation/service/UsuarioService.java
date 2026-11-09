@@ -1,5 +1,6 @@
 package com.devsenior.msal.reservation.service;
 
+import com.devsenior.msal.reservation.dto.response.ClienteResumenDTO;
 import com.devsenior.msal.reservation.dto.request.UsuarioRequestDTO;
 import com.devsenior.msal.reservation.dto.response.UsuarioResponseDTO;
 import com.devsenior.msal.reservation.enums.Rol;
@@ -15,4 +16,5 @@ public interface UsuarioService {
     UsuarioResponseDTO findUsuarioById(Long id);
     List<UsuarioResponseDTO> findAllUsuarios();
     List<UsuarioResponseDTO> findAllUsuariosActivos();
+    List<ClienteResumenDTO> findClientesActivos();
 }

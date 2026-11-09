@@ -3,6 +3,7 @@ package com.devsenior.msal.reservation.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.devsenior.msal.reservation.entity.Usuario;
+import com.devsenior.msal.reservation.enums.Rol;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -12,4 +13,5 @@ import java.util.Optional;
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Optional<Usuario> findByMail(String mail);
     List<Usuario> findByFechaBajaIsNull();
+    List<Usuario> findByRolAndFechaBajaIsNullOrderByApellidoAscNombreAsc(Rol rol);
 }

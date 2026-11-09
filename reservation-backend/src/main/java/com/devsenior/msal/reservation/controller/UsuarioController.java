@@ -2,6 +2,7 @@ package com.devsenior.msal.reservation.controller;
 
 import com.devsenior.msal.reservation.dto.request.ActualizarRolRequestDTO;
 import com.devsenior.msal.reservation.dto.request.UsuarioRequestDTO;
+import com.devsenior.msal.reservation.dto.response.ClienteResumenDTO;
 import com.devsenior.msal.reservation.dto.response.UsuarioResponseDTO;
 import com.devsenior.msal.reservation.enums.Rol;
 import com.devsenior.msal.reservation.service.UsuarioService;
@@ -77,9 +78,17 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.findAllUsuarios());
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN','EMPLEADO')")
+    // Solo ADMIN: devuelve el DTO completo (teléfono y rol) de todos los usuarios, staff incluido
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/activos")
     public ResponseEntity<List<UsuarioResponseDTO>> findAllUsuariosActivos() {
         return ResponseEntity.ok(usuarioService.findAllUsuariosActivos());
+    }
+
+    // Para que el staff elija a quién reservarle: solo clientes activos, con datos mínimos
+    @PreAuthorize("hasAnyRole('ADMIN','EMPLEADO')")
+    @GetMapping("/clientes")
+    public ResponseEntity<List<ClienteResumenDTO>> findClientesActivos() {
+        return ResponseEntity.ok(usuarioService.findClientesActivos());
     }
 }
