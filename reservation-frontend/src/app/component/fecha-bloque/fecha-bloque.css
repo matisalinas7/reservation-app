@@ -1,0 +1,34 @@
+:host {
+  display: block;
+  flex-shrink: 0;
+}
+
+.fecha-bloque {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  padding: var(--space-2) 0;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--brand);
+  background: var(--brand-soft);
+  border-radius: var(--radius-container);
+}
+
+:host([data-apagado='true']) .fecha-bloque {
+  color: var(--ink-muted);
+  background: var(--paper-strong);
+}
+
+.fecha-bloque__dia,
+.fecha-bloque__mes {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.fecha-bloque__num {
+  font-size: var(--text-xl);
+  font-weight: 700;
+}

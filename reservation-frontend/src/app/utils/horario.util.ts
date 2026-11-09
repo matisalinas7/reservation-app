@@ -42,3 +42,63 @@ export function horaActual(): string {
   const mm = String(ahora.getMinutes()).padStart(2, '0');
   return `${hh}:${mm}`;
 }
+
+// ---- Formato de fechas para mostrar (todas reciben "yyyy-MM-dd") ----
+
+const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS_LARGOS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+// Date en hora local (mismo motivo que diaDeLaSemana: new Date("2026-08-10") sería UTC)
+function fechaLocal(fecha: string): Date {
+  const [anio, mes, dia] = fecha.split('-').map(Number);
+  return new Date(anio, mes - 1, dia);
+}
+
+// "2026-11-12" -> "Jue"
+export function diaCorto(fecha: string): string {
+  return DIAS_CORTOS[fechaLocal(fecha).getDay()];
+}
+
+// "2026-11-12" -> 12
+export function diaDelMes(fecha: string): number {
+  return fechaLocal(fecha).getDate();
+}
+
+// "2026-11-12" -> "nov"
+export function mesCorto(fecha: string): string {
+  return MESES[fechaLocal(fecha).getMonth()].slice(0, 3);
+}
+
+// "2026-11-12" -> "jueves 12 de noviembre"
+export function fechaLarga(fecha: string): string {
+  const d = fechaLocal(fecha);
+  return `${DIAS_LARGOS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`;
+}
+
+// "2026-11-12" + 1 -> "2026-11-13" (en hora local)
+export function sumarDias(fecha: string, dias: number): string {
+  const d = fechaLocal(fecha);
+  d.setDate(d.getDate() + dias);
+  const mes = String(d.getMonth() + 1).padStart(2, '0');
+  const dia = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}-${mes}-${dia}`;
+}
+
+// "jueves 12" -> "Jueves 12"
+export function capitalizar(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}

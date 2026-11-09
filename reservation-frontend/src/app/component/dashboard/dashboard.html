@@ -1,55 +1,114 @@
 <section class="page dashboard" aria-labelledby="dashboard-title">
-  <div class="dashboard__hero">
-    <div>
-      <h1 id="dashboard-title">Hola, {{ currentUser()?.mail }}</h1>
-      <p class="page__subtitle">
-        @if (esAdmin()) {
-          Panel administrativo: gestioná usuarios, servicios, turnos, horarios y categorías.
-        } @else if (esEmpleado()) {
-          Consultá las reservas y cargá turnos para clientes que llegan al local.
-        } @else {
-          Gestioná tus reservas y sacá turnos nuevos.
-        }
-      </p>
-    </div>
-    <span class="badge">{{ rolLabel() }}</span>
-  </div>
+  <header class="dashboard__greeting">
+    <h1 id="dashboard-title">Hola</h1>
+    <p class="text-sm muted">{{ currentUser()?.mail }} · {{ rolLabel() }}</p>
+  </header>
 
-  <div class="dashboard__grid">
-    <article class="card panel">
-      <h2>{{ esStaff() ? 'Reservas' : 'Mis reservas' }}</h2>
-      <p>
-        @if (esStaff()) {
-          Revisá todas las reservas del sistema y cancelá las que haga falta.
-        } @else {
-          Revisá el estado de tus turnos y cancelá los que ya no necesites.
-        }
-      </p>
-      <a routerLink="/reservas" class="btn btn--primary">Ir a reservas</a>
-    </article>
+  <!-- ===== CLIENTE: tu próximo turno ===== -->
+  @if (esCliente()) {
+    <section aria-labelledby="proximo-title">
+      <h2 id="proximo-title" class="dashboard__section-title">Tu próximo turno</h2>
 
-    @if (puedeReservar()) {
-      <article class="card panel">
-        <h2>Nueva reserva</h2>
-        <p>
-          @if (esEmpleado()) {
-            Cargá un turno a nombre de un cliente presencial.
-          } @else {
-            Elegí servicio, fecha y horario para sacar un turno.
+      @if (loading()) {
+        <p class="state state--loading" role="status">Buscando tus turnos…</p>
+      } @else if (error(); as errMsg) {
+        <div class="state state--error" role="alert">
+          <span>{{ errMsg }}</span>
+          <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+        </div>
+      } @else if (proximoTurno(); as t) {
+        <article class="card proximo">
+          <app-fecha-bloque class="proximo__fecha" [fecha]="t.fecha" />
+          <div class="proximo__info">
+            <p class="proximo__cuando">{{ cuando(t.fecha) }}</p>
+            <p class="proximo__hora num">
+              <time [attr.datetime]="t.fecha + 'T' + hhmm(t.horaInicio)">{{ hhmm(t.horaInicio) }}</time>
+              <span class="proximo__hasta"> a {{ hhmm(t.horaFin) }}</span>
+            </p>
+            <p class="proximo__servicio">{{ t.servicioNombre }}</p>
+          </div>
+          <div class="proximo__acciones">
+            <a routerLink="/reservas" class="btn btn--secondary">Ver mis reservas</a>
+            <a routerLink="/nueva" class="btn btn--primary">Nueva reserva</a>
+          </div>
+        </article>
+        @if (proximas().length > 1) {
+          <p class="dashboard__more text-sm muted">
+            Tenés {{ proximas().length - 1 }}
+            {{ proximas().length - 1 === 1 ? 'turno más reservado' : 'turnos más reservados' }}.
+            <a routerLink="/reservas">Ver todos</a>
+          </p>
+        }
+      } @else {
+        <div class="state state--empty">
+          <p>No tenés turnos próximos.</p>
+          <a routerLink="/nueva" class="btn btn--primary">Reservar un turno</a>
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ===== EMPLEADO: turnos de hoy ===== -->
+  @if (esEmpleado()) {
+    <section aria-labelledby="hoy-title">
+      <div class="dashboard__section-head">
+        <div>
+          <h2 id="hoy-title" class="dashboard__section-title">Turnos de hoy</h2>
+          <p class="text-sm muted">
+            <time [attr.datetime]="hoy">{{ hoyLarga }}</time>
+            @if (!loading() && !error()) {
+              · {{ turnosDeHoy().length }} {{ turnosDeHoy().length === 1 ? 'turno' : 'turnos' }}
+            }
+          </p>
+        </div>
+        <a routerLink="/nueva" class="btn btn--primary">Nueva reserva para un cliente</a>
+      </div>
+
+      @if (loading()) {
+        <p class="state state--loading" role="status">Cargando los turnos de hoy…</p>
+      } @else if (error(); as errMsg) {
+        <div class="state state--error" role="alert">
+          <span>{{ errMsg }}</span>
+          <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+        </div>
+      } @else if (turnosDeHoy().length === 0) {
+        <div class="state state--empty">
+          <p>No hay turnos reservados para hoy.</p>
+        </div>
+      } @else {
+        <ol class="agenda">
+          @for (r of turnosDeHoy(); track r.id) {
+            <li class="agenda__item">
+              <p class="agenda__hora num">
+                <time [attr.datetime]="r.fecha + 'T' + hhmm(r.horaInicio)">{{ hhmm(r.horaInicio) }}</time>
+                <span class="agenda__hasta">{{ hhmm(r.horaFin) }}</span>
+              </p>
+              <div class="agenda__detalle">
+                <p class="agenda__servicio">{{ r.servicioNombre }}</p>
+                <p class="text-sm muted">{{ r.usuarioNombre }} · {{ r.usuarioMail }}</p>
+              </div>
+            </li>
           }
-        </p>
-        <a routerLink="/nueva" class="btn btn--secondary">Crear reserva</a>
-      </article>
-    }
-  </div>
+        </ol>
+        <p class="dashboard__more text-sm"><a routerLink="/reservas">Ver todas las reservas</a></p>
+      }
+    </section>
+  }
 
+  <!-- ===== ADMIN: accesos al panel ===== -->
   @if (esAdmin()) {
-    <section class="card panel panel--list">
-      <h2>Acciones de administrador</h2>
-      <ul class="quick-links">
-        @for (item of adminQuickLinks; track item.path) {
+    <section aria-labelledby="admin-title">
+      <div class="dashboard__section-head">
+        <h2 id="admin-title" class="dashboard__section-title">Administración</h2>
+        <a routerLink="/reservas" class="btn btn--secondary">Ver reservas</a>
+      </div>
+      <ul class="admin-links">
+        @for (item of adminLinks; track item.path) {
           <li>
-            <a [routerLink]="item.path" class="btn btn--secondary">{{ item.label }}</a>
+            <a [routerLink]="item.path" class="admin-links__item">
+              <span class="admin-links__label">{{ item.label }}</span>
+              <span class="text-sm muted">{{ item.detalle }}</span>
+            </a>
           </li>
         }
       </ul>
