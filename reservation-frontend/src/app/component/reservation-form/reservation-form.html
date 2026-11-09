@@ -1,10 +1,26 @@
 <section class="reservation-form" aria-labelledby="reservation-form-title">
   <div class="reservation-form__header">
     <a routerLink="/" class="back-link">← Volver al inicio</a>
-    <h1 id="reservation-form-title">Nueva reserva</h1>
+    <h1 id="reservation-form-title">
+      {{ esEmpleado() ? 'Nueva reserva para un cliente' : 'Nueva reserva' }}
+    </h1>
   </div>
 
   <form [formGroup]="form" (ngSubmit)="reservar()" novalidate>
+    @if (esEmpleado()) {
+      <div class="field">
+        <label for="clienteId">Cliente</label>
+        <select id="clienteId" formControlName="clienteId">
+          <option [ngValue]="0" disabled>
+            {{ clientes().length === 0 ? 'No hay clientes activos' : 'Seleccioná un cliente' }}
+          </option>
+          @for (c of clientes(); track c.id) {
+            <option [ngValue]="c.id">{{ c.apellido }}, {{ c.nombre }} — {{ c.mail }}</option>
+          }
+        </select>
+      </div>
+    }
+
     <div class="field">
       <label for="categoriaId">Categoría</label>
       <select id="categoriaId" formControlName="categoriaId">
@@ -57,7 +73,11 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="!turnoSeleccionado() || submitting()">
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="!turnoSeleccionado() || submitting() || form.controls.clienteId.invalid"
+      >
         @if (submitting()) {
           Reservando…
         } @else {
