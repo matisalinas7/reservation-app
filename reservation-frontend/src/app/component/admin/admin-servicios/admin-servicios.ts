@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { AdminNavComponent } from '../admin-nav/admin-nav';
 import { AdminCategoria, AdminServicio } from '../../../model/admin.model';
 import { AdminService } from '../../../services/admin.service';
 import { ToastService } from '../../../services/toast.service';
@@ -9,7 +9,7 @@ import { formatHttpError } from '../../../utils/http-error.util';
 
 @Component({
   selector: 'app-admin-servicios',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, AdminNavComponent],
   templateUrl: './admin-servicios.html',
   styleUrl: '../admin-shared.css',
 })
@@ -22,6 +22,8 @@ export class AdminServiciosComponent implements OnInit {
   readonly categorias = signal<AdminCategoria[]>([]);
   readonly categoriasActivas = computed(() => this.categorias().filter((c) => !c.fechaBaja));
   readonly loading = signal(false);
+  /** Error al cargar la lista (se muestra en la página, con Reintentar). */
+  readonly error = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly editingId = signal<number | null>(null);
 
@@ -46,6 +48,7 @@ export class AdminServiciosComponent implements OnInit {
 
   cargar(): void {
     this.loading.set(true);
+    this.error.set(null);
     this.adminService.getServicios().subscribe({
       next: (data) => {
         this.servicios.set(data);
@@ -53,7 +56,7 @@ export class AdminServiciosComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.toast.showError(formatHttpError(err));
+        this.error.set(formatHttpError(err));
       },
     });
   }

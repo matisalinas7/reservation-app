@@ -1,10 +1,10 @@
-<section class="admin-page" aria-labelledby="servicios-title">
-  <header class="admin-page__header">
-    <a routerLink="/" class="back-link">← Volver al inicio</a>
+<section class="page admin-page" aria-labelledby="servicios-title">
+  <app-admin-nav />
+  <header class="page__header">
     <h1 id="servicios-title">Servicios</h1>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <form class="card admin-form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
     <h2>{{ editingId() === null ? 'Nuevo servicio' : 'Editar servicio' }}</h2>
 
     <div class="field">
@@ -45,29 +45,34 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary" [disabled]="submitting()">
         {{ editingId() === null ? 'Crear' : 'Guardar cambios' }}
       </button>
       @if (editingId() !== null) {
-        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+        <button type="button" class="btn btn--secondary" (click)="cancelarEdicion()">Cancelar</button>
       }
     </div>
   </form>
 
   @if (loading()) {
-    <p class="state" role="status">Cargando servicios…</p>
+    <p class="state state--loading" role="status">Cargando servicios…</p>
+  } @else if (error(); as errMsg) {
+    <div class="state state--error" role="alert">
+      <span>{{ errMsg }}</span>
+      <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+    </div>
   } @else if (servicios().length === 0) {
-    <p class="state">No hay servicios registrados.</p>
+    <p class="state state--empty">No hay servicios registrados.</p>
   } @else {
     <div class="table-wrap">
-      <table>
+      <table class="table">
         <thead>
           <tr>
             <th scope="col">Nombre</th>
             <th scope="col">Categoría</th>
             <th scope="col">Duración</th>
             <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -77,16 +82,16 @@
               <td>{{ nombreCategoria(s.categoriaId) }}</td>
               <td>{{ s.duracion }} min</td>
               <td>
-                <span class="badge" [class.badge--baja]="s.fechaBaja">
+                <span class="badge" [class.badge--active]="!s.fechaBaja" [class.badge--inactive]="s.fechaBaja">
                   {{ s.fechaBaja ? 'Dado de baja' : 'Activo' }}
                 </span>
               </td>
               <td class="row-actions">
-                <button type="button" class="btn-link" (click)="editar(s)">Editar</button>
+                <button type="button" class="btn btn--ghost" (click)="editar(s)">Editar</button>
                 @if (s.fechaBaja) {
-                  <button type="button" class="btn-link" (click)="reactivar(s)">Reactivar</button>
+                  <button type="button" class="btn btn--ghost" (click)="reactivar(s)">Reactivar</button>
                 } @else {
-                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(s)">
+                  <button type="button" class="btn btn--ghost-danger" (click)="darDeBaja(s)">
                     Dar de baja
                   </button>
                 }

@@ -14,15 +14,7 @@ import { ReservationService } from '../services/reservation.service';
 import { ToastService } from '../services/toast.service';
 import { formatHttpError } from '../utils/http-error.util';
 import { FechaBloqueComponent } from './fecha-bloque/fecha-bloque';
-import {
-  diaCorto,
-  diaDelMes,
-  fechaLarga,
-  hhmm,
-  horaActual,
-  hoyISO,
-  mesCorto,
-} from '../utils/horario.util';
+import { fechaCorta, fechaLarga, hhmm, horaActual, hoyISO } from '../utils/horario.util';
 
 @Component({
   selector: 'app-reservation-list',
@@ -36,6 +28,7 @@ export class ReservationListComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly hhmm = hhmm;
+  readonly fechaCorta = fechaCorta;
   readonly ReservationStatus = ReservationStatus;
   readonly MOTIVOS = MOTIVOS_CANCELACION;
 
@@ -97,11 +90,6 @@ export class ReservationListComponent implements OnInit {
     return fechaLarga(fecha);
   }
 
-  /** Para la tabla: "Jue 12 nov" (+ año si no es el actual). */
-  fechaCorta(fecha: string): string {
-    const texto = `${diaCorto(fecha)} ${diaDelMes(fecha)} ${mesCorto(fecha)}`;
-    return fecha.slice(0, 4) === this.hoy.slice(0, 4) ? texto : `${texto} ${fecha.slice(0, 4)}`;
-  }
 
   load(): void {
     this.loading.set(true);

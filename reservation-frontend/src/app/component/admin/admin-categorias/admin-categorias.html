@@ -1,10 +1,10 @@
-<section class="admin-page" aria-labelledby="categorias-title">
-  <header class="admin-page__header">
-    <a routerLink="/" class="back-link">← Volver al inicio</a>
+<section class="page admin-page" aria-labelledby="categorias-title">
+  <app-admin-nav />
+  <header class="page__header">
     <h1 id="categorias-title">Categorías</h1>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+  <form class="card admin-form" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
     <h2>{{ editingId() === null ? 'Nueva categoría' : 'Editar categoría' }}</h2>
 
     <div class="field">
@@ -24,28 +24,33 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary" [disabled]="submitting()">
         {{ editingId() === null ? 'Crear' : 'Guardar cambios' }}
       </button>
       @if (editingId() !== null) {
-        <button type="button" class="btn-secondary" (click)="cancelarEdicion()">Cancelar</button>
+        <button type="button" class="btn btn--secondary" (click)="cancelarEdicion()">Cancelar</button>
       }
     </div>
   </form>
 
   @if (loading()) {
-    <p class="state" role="status">Cargando categorías…</p>
+    <p class="state state--loading" role="status">Cargando categorías…</p>
+  } @else if (error(); as errMsg) {
+    <div class="state state--error" role="alert">
+      <span>{{ errMsg }}</span>
+      <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+    </div>
   } @else if (categorias().length === 0) {
-    <p class="state">No hay categorías registradas.</p>
+    <p class="state state--empty">No hay categorías registradas.</p>
   } @else {
     <div class="table-wrap">
-      <table>
+      <table class="table">
         <thead>
           <tr>
             <th scope="col">Nombre</th>
             <th scope="col">Descripción</th>
             <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -54,16 +59,16 @@
               <td>{{ c.nombre }}</td>
               <td>{{ c.descripcion }}</td>
               <td>
-                <span class="badge" [class.badge--baja]="c.fechaBaja">
+                <span class="badge" [class.badge--active]="!c.fechaBaja" [class.badge--inactive]="c.fechaBaja">
                   {{ c.fechaBaja ? 'Dada de baja' : 'Activa' }}
                 </span>
               </td>
               <td class="row-actions">
-                <button type="button" class="btn-link" (click)="editar(c)">Editar</button>
+                <button type="button" class="btn btn--ghost" (click)="editar(c)">Editar</button>
                 @if (c.fechaBaja) {
-                  <button type="button" class="btn-link" (click)="reactivar(c)">Reactivar</button>
+                  <button type="button" class="btn btn--ghost" (click)="reactivar(c)">Reactivar</button>
                 } @else {
-                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(c)">
+                  <button type="button" class="btn btn--ghost-danger" (click)="darDeBaja(c)">
                     Dar de baja
                   </button>
                 }

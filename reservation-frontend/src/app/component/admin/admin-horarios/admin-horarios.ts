@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { AdminNavComponent } from '../admin-nav/admin-nav';
 import { AdminHorario, AdminServicio } from '../../../model/admin.model';
 import { AdminService } from '../../../services/admin.service';
 import { ToastService } from '../../../services/toast.service';
@@ -10,7 +10,7 @@ import { DIAS, diaLabel, hhmm } from '../../../utils/horario.util';
 
 @Component({
   selector: 'app-admin-horarios',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, AdminNavComponent],
   templateUrl: './admin-horarios.html',
   styleUrl: '../admin-shared.css',
 })
@@ -27,6 +27,8 @@ export class AdminHorariosComponent implements OnInit {
   readonly servicios = signal<AdminServicio[]>([]);
   readonly serviciosActivos = computed(() => this.servicios().filter((s) => !s.fechaBaja));
   readonly loading = signal(false);
+  /** Error al cargar la lista (se muestra en la página, con Reintentar). */
+  readonly error = signal<string | null>(null);
   readonly submitting = signal(false);
   readonly editingId = signal<number | null>(null);
 
@@ -51,6 +53,7 @@ export class AdminHorariosComponent implements OnInit {
 
   cargar(): void {
     this.loading.set(true);
+    this.error.set(null);
     this.adminService.getHorarios().subscribe({
       next: (data) => {
         this.horarios.set(data);
@@ -58,7 +61,7 @@ export class AdminHorariosComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.toast.showError(formatHttpError(err));
+        this.error.set(formatHttpError(err));
       },
     });
   }

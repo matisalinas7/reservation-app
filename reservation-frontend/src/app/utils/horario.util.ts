@@ -98,6 +98,13 @@ export function sumarDias(fecha: string, dias: number): string {
   return `${d.getFullYear()}-${mes}-${dia}`;
 }
 
+// "2026-11-12" -> "Jue 12 nov" (+ " 2025" si no es del año actual)
+export function fechaCorta(fecha: string): string {
+  const texto = `${diaCorto(fecha)} ${diaDelMes(fecha)} ${mesCorto(fecha)}`;
+  const anio = fecha.slice(0, 4);
+  return anio === hoyISO().slice(0, 4) ? texto : `${texto} ${anio}`;
+}
+
 // "jueves 12" -> "Jueves 12"
 export function capitalizar(texto: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);

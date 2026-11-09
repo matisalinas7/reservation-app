@@ -1,16 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { AdminNavComponent } from '../admin-nav/admin-nav';
 import { AdminHorario, AdminServicio, AdminTurno } from '../../../model/admin.model';
 import { AdminService } from '../../../services/admin.service';
 import { ToastService } from '../../../services/toast.service';
 import { formatHttpError } from '../../../utils/http-error.util';
-import { diaDeLaSemana, diaLabel, hhmm, hoyISO } from '../../../utils/horario.util';
+import { diaDeLaSemana, diaLabel, fechaCorta, hhmm, hoyISO } from '../../../utils/horario.util';
 
 @Component({
   selector: 'app-admin-turnos',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, AdminNavComponent],
   templateUrl: './admin-turnos.html',
   styleUrl: '../admin-shared.css',
 })
@@ -20,6 +20,7 @@ export class AdminTurnosComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly hhmm = hhmm;
+  readonly fechaCorta = fechaCorta;
   readonly hoy = hoyISO();
 
   readonly turnos = signal<AdminTurno[]>([]);
@@ -38,6 +39,8 @@ export class AdminTurnosComponent implements OnInit {
   });
 
   readonly loading = signal(false);
+  /** Error al cargar la lista (se muestra en la página, con Reintentar). */
+  readonly error = signal<string | null>(null);
   readonly submitting = signal(false);
 
   readonly form = this.fb.nonNullable.group({
@@ -63,6 +66,7 @@ export class AdminTurnosComponent implements OnInit {
 
   cargar(): void {
     this.loading.set(true);
+    this.error.set(null);
     this.adminService.getTurnos().subscribe({
       next: (data) => {
         this.turnos.set(data);
@@ -70,7 +74,7 @@ export class AdminTurnosComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.toast.showError(formatHttpError(err));
+        this.error.set(formatHttpError(err));
       },
     });
   }

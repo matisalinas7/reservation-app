@@ -57,25 +57,6 @@
   --control-height: 44px;
   --page-max: 1100px;
   --transition: 150ms ease;
-
-  /* Alias de la paleta vieja: solo los usa admin-shared.css.
-     Se borran en el paso 5, cuando el panel use los componentes globales. */
-  --color-primary: var(--brand);
-  --color-primary-hover: var(--brand-hover);
-  --color-primary-light: var(--brand-soft);
-  --color-success: var(--brand);
-  --color-success-light: var(--brand-soft);
-  --color-danger: var(--danger);
-  --color-danger-light: var(--danger-soft);
-  --color-text-primary: var(--ink);
-  --color-text-secondary: var(--ink-muted);
-  --color-text-muted: var(--ink-muted);
-  --color-border: var(--line);
-  --color-surface: var(--paper);
-  --color-surface-hover: var(--paper-strong);
-  --radius-sm: var(--radius-control);
-  --radius-md: var(--radius-control);
-  --radius-lg: var(--radius-container);
 }
 
 /* ---------- 2. Base ---------- */
@@ -255,6 +236,15 @@ time,
   color: var(--brand-hover);
 }
 
+.btn--ghost-danger {
+  color: var(--danger);
+}
+
+.btn--ghost-danger:hover:not(:disabled) {
+  background: var(--danger-soft);
+  color: var(--danger-hover);
+}
+
 .btn:disabled,
 .btn[aria-disabled='true'] {
   background: var(--disabled-bg);
@@ -398,7 +388,8 @@ textarea:disabled {
   color: var(--danger);
 }
 
-.badge--completed {
+.badge--completed,
+.badge--inactive {
   background: var(--paper-strong);
   color: var(--ink-muted);
 }
@@ -498,6 +489,10 @@ textarea:disabled {
 
 .muted {
   color: var(--ink-muted);
+}
+
+.nowrap {
+  white-space: nowrap;
 }
 
 .text-sm {

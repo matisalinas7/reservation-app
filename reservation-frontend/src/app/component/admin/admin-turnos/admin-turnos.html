@@ -1,10 +1,10 @@
-<section class="admin-page" aria-labelledby="turnos-title">
-  <header class="admin-page__header">
-    <a routerLink="/" class="back-link">← Volver al inicio</a>
+<section class="page admin-page" aria-labelledby="turnos-title">
+  <app-admin-nav />
+  <header class="page__header">
     <h1 id="turnos-title">Turnos</h1>
   </header>
 
-  <form [formGroup]="form" (ngSubmit)="generar()" novalidate>
+  <form class="card admin-form" [formGroup]="form" (ngSubmit)="generar()" novalidate>
     <h2>Generar turnos</h2>
 
     <div class="field">
@@ -29,7 +29,7 @@
     </div>
 
     <div class="actions">
-      <button type="submit" class="btn-primary" [disabled]="submitting()">
+      <button type="submit" class="btn btn--primary" [disabled]="submitting()">
         @if (submitting()) {
           Generando…
         } @else {
@@ -39,7 +39,7 @@
     </div>
   </form>
 
-  <div class="field filter">
+  <div class="field admin-filter">
     <label for="filtroFecha">Filtrar por fecha</label>
     <div class="actions">
       <input
@@ -49,43 +49,50 @@
         (change)="onFiltroFecha($event)"
       />
       @if (filtroFecha()) {
-        <button type="button" class="btn-secondary" (click)="filtroFecha.set('')">Limpiar</button>
+        <button type="button" class="btn btn--secondary" (click)="filtroFecha.set('')">Limpiar</button>
       }
     </div>
   </div>
 
   @if (loading()) {
-    <p class="state" role="status">Cargando turnos…</p>
+    <p class="state state--loading" role="status">Cargando turnos…</p>
+  } @else if (error(); as errMsg) {
+    <div class="state state--error" role="alert">
+      <span>{{ errMsg }}</span>
+      <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+    </div>
   } @else if (turnosVisibles().length === 0) {
-    <p class="state">No hay turnos para mostrar.</p>
+    <p class="state state--empty">No hay turnos para mostrar.</p>
   } @else {
     <div class="table-wrap">
-      <table>
+      <table class="table">
         <thead>
           <tr>
             <th scope="col">Fecha</th>
             <th scope="col">Hora</th>
             <th scope="col">Servicio</th>
             <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
           @for (t of turnosVisibles(); track t.id) {
             <tr>
-              <td>{{ t.fecha }}</td>
-              <td>{{ hhmm(t.horaInicio) }} – {{ hhmm(t.horaFin) }}</td>
+              <td class="num nowrap">
+                <time [attr.datetime]="t.fecha">{{ fechaCorta(t.fecha) }}</time>
+              </td>
+              <td class="num nowrap">{{ hhmm(t.horaInicio) }} a {{ hhmm(t.horaFin) }}</td>
               <td>{{ servicioDelTurno(t) }}</td>
               <td>
-                <span class="badge" [class.badge--baja]="t.fechaBaja">
+                <span class="badge" [class.badge--active]="!t.fechaBaja" [class.badge--inactive]="t.fechaBaja">
                   {{ t.fechaBaja ? 'Dado de baja' : 'Activo' }}
                 </span>
               </td>
               <td class="row-actions">
                 @if (t.fechaBaja) {
-                  <button type="button" class="btn-link" (click)="reactivar(t)">Reactivar</button>
+                  <button type="button" class="btn btn--ghost" (click)="reactivar(t)">Reactivar</button>
                 } @else {
-                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(t)">
+                  <button type="button" class="btn btn--ghost-danger" (click)="darDeBaja(t)">
                     Dar de baja
                   </button>
                 }

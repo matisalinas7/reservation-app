@@ -1,16 +1,21 @@
-<section class="admin-page" aria-labelledby="usuarios-title">
-  <header class="admin-page__header">
-    <a routerLink="/" class="back-link">← Volver al inicio</a>
+<section class="page admin-page" aria-labelledby="usuarios-title">
+  <app-admin-nav />
+  <header class="page__header">
     <h1 id="usuarios-title">Usuarios</h1>
   </header>
 
   @if (loading()) {
-    <p class="state" role="status">Cargando usuarios…</p>
+    <p class="state state--loading" role="status">Cargando usuarios…</p>
+  } @else if (error(); as errMsg) {
+    <div class="state state--error" role="alert">
+      <span>{{ errMsg }}</span>
+      <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
+    </div>
   } @else if (usuarios().length === 0) {
-    <p class="state">No hay usuarios registrados.</p>
+    <p class="state state--empty">No hay usuarios registrados.</p>
   } @else {
     <div class="table-wrap">
-      <table>
+      <table class="table">
         <thead>
           <tr>
             <th scope="col">Nombre</th>
@@ -18,7 +23,7 @@
             <th scope="col">Teléfono</th>
             <th scope="col">Rol</th>
             <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
@@ -34,22 +39,22 @@
                   (change)="cambiarRol(u, $event)"
                 >
                   @for (r of roles; track r) {
-                    <option [value]="r" [selected]="r === u.rol">{{ r }}</option>
+                    <option [value]="r" [selected]="r === u.rol">{{ rolLabel(r) }}</option>
                   }
                 </select>
               </td>
               <td>
-                <span class="badge" [class.badge--baja]="u.fechaBaja">
+                <span class="badge" [class.badge--active]="!u.fechaBaja" [class.badge--inactive]="u.fechaBaja">
                   {{ u.fechaBaja ? 'Dado de baja' : 'Activo' }}
                 </span>
               </td>
               <td class="row-actions">
                 @if (esUsuarioActual(u)) {
-                  <span>(vos)</span>
+                  <span class="muted">Tu cuenta</span>
                 } @else if (u.fechaBaja) {
-                  <button type="button" class="btn-link" (click)="reactivar(u)">Reactivar</button>
+                  <button type="button" class="btn btn--ghost" (click)="reactivar(u)">Reactivar</button>
                 } @else {
-                  <button type="button" class="btn-link btn-link--danger" (click)="darDeBaja(u)">
+                  <button type="button" class="btn btn--ghost-danger" (click)="darDeBaja(u)">
                     Dar de baja
                   </button>
                 }

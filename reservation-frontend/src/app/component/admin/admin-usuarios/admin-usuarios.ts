@@ -1,15 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { AdminNavComponent } from '../admin-nav/admin-nav';
 import { AdminUser } from '../../../model/admin.model';
 import { AdminService } from '../../../services/admin.service';
 import { AuthService } from '../../../services/auth.service';
 import { ToastService } from '../../../services/toast.service';
 import { formatHttpError } from '../../../utils/http-error.util';
+import { rolLabel } from '../../../utils/rol.util';
 
 @Component({
   selector: 'app-admin-usuarios',
-  imports: [RouterLink],
+  imports: [AdminNavComponent],
   templateUrl: './admin-usuarios.html',
   styleUrl: '../admin-shared.css',
 })
@@ -19,8 +20,11 @@ export class AdminUsuariosComponent implements OnInit {
   private readonly toast = inject(ToastService);
 
   readonly roles = ['CLIENTE', 'EMPLEADO', 'ADMIN'] as const;
+  readonly rolLabel = rolLabel;
   readonly usuarios = signal<AdminUser[]>([]);
   readonly loading = signal(false);
+  /** Error al cargar la lista (se muestra en la página, con Reintentar). */
+  readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.cargar();
@@ -28,6 +32,7 @@ export class AdminUsuariosComponent implements OnInit {
 
   cargar(): void {
     this.loading.set(true);
+    this.error.set(null);
     this.adminService.getUsuarios().subscribe({
       next: (data) => {
         this.usuarios.set(data);
@@ -35,7 +40,7 @@ export class AdminUsuariosComponent implements OnInit {
       },
       error: (err: HttpErrorResponse) => {
         this.loading.set(false);
-        this.toast.showError(formatHttpError(err));
+        this.error.set(formatHttpError(err));
       },
     });
   }
