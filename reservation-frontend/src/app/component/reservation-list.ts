@@ -1,7 +1,9 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import {
+  ESTADOS_RESERVA,
   MOTIVOS_CANCELACION,
   MotivoCancelacion,
   Reservation,
@@ -11,11 +13,20 @@ import { AuthService } from '../services/auth.service';
 import { ReservationService } from '../services/reservation.service';
 import { ToastService } from '../services/toast.service';
 import { formatHttpError } from '../utils/http-error.util';
-import { hhmm } from '../utils/horario.util';
+import { FechaBloqueComponent } from './fecha-bloque/fecha-bloque';
+import {
+  diaCorto,
+  diaDelMes,
+  fechaLarga,
+  hhmm,
+  horaActual,
+  hoyISO,
+  mesCorto,
+} from '../utils/horario.util';
 
 @Component({
   selector: 'app-reservation-list',
-  imports: [RouterLink],
+  imports: [RouterLink, NgTemplateOutlet, FechaBloqueComponent],
   templateUrl: './reservation-list.html',
   styleUrl: './reservation-list.css',
 })
@@ -49,8 +60,47 @@ export class ReservationListComponent implements OnInit {
     ),
   );
 
+  // ---- Solo para la vista del CLIENTE (tarjetas) ----
+
+  private readonly hoy = hoyISO();
+
+  /** Activas que todavía no empezaron: de la más cercana a la más lejana. */
+  readonly proximas = computed(() => {
+    const ahora = horaActual();
+    return this.ordenadas()
+      .filter((r) => this.esProxima(r, ahora))
+      .reverse();
+  });
+
+  /** Todo lo demás (canceladas, completadas y activas que ya pasaron): más recientes primero. */
+  readonly historial = computed(() => {
+    const ahora = horaActual();
+    return this.ordenadas().filter((r) => !this.esProxima(r, ahora));
+  });
+
   ngOnInit(): void {
     this.load();
+  }
+
+  private esProxima(r: Reservation, ahora: string): boolean {
+    return (
+      r.estado === ReservationStatus.ACTIVE &&
+      (r.fecha > this.hoy || (r.fecha === this.hoy && hhmm(r.horaInicio) >= ahora))
+    );
+  }
+
+  etiquetaEstado(valor: ReservationStatus): string {
+    return ESTADOS_RESERVA.find((e) => e.valor === valor)?.etiqueta ?? valor;
+  }
+
+  fechaLarga(fecha: string): string {
+    return fechaLarga(fecha);
+  }
+
+  /** Para la tabla: "Jue 12 nov" (+ año si no es el actual). */
+  fechaCorta(fecha: string): string {
+    const texto = `${diaCorto(fecha)} ${diaDelMes(fecha)} ${mesCorto(fecha)}`;
+    return fecha.slice(0, 4) === this.hoy.slice(0, 4) ? texto : `${texto} ${fecha.slice(0, 4)}`;
   }
 
   load(): void {

@@ -1,4 +1,8 @@
-<section class="page" aria-labelledby="reservation-list-title">
+<section
+  class="page"
+  [class.reservation-list--cliente]="!esStaff()"
+  aria-labelledby="reservation-list-title"
+>
   <header class="page__header">
     <h1 id="reservation-list-title">{{ esStaff() ? 'Reservas' : 'Mis reservas' }}</h1>
     @if (puedeReservar()) {
@@ -8,99 +12,50 @@
 
   @if (loading()) {
     <p class="state state--loading" role="status">Cargando reservas…</p>
-  }
-
-  @if (error(); as errMsg) {
-    <p class="state state--error" role="alert">{{ errMsg }}</p>
-  }
-
-  @if (!loading() && reservations().length === 0 && !error()) {
-    <p class="state state--empty">No hay reservas registradas.</p>
-  }
-
-  @if (!loading() && reservations().length > 0) {
+  } @else if (error(); as errMsg) {
+    <div class="state state--error" role="alert">
+      <span>{{ errMsg }}</span>
+      <button type="button" class="btn btn--secondary" (click)="load()">Reintentar</button>
+    </div>
+  } @else if (reservations().length === 0) {
+    <div class="state state--empty">
+      <p>{{ esStaff() ? 'No hay reservas registradas.' : 'Todavía no tenés reservas.' }}</p>
+      @if (puedeReservar()) {
+        <a routerLink="/nueva" class="btn btn--primary">Reservar un turno</a>
+      }
+    </div>
+  } @else if (esStaff()) {
+    <!-- ===== ADMIN / EMPLEADO: tabla ===== -->
     <div class="table-wrap">
       <table class="table">
         <thead>
           <tr>
-            @if (esStaff()) {
-              <th scope="col">Usuario</th>
-            }
+            <th scope="col">Usuario</th>
             <th scope="col">Servicio</th>
             <th scope="col">Fecha</th>
-            <th scope="col">Hora</th>
+            <th scope="col">Horario</th>
             <th scope="col">Estado</th>
-            <th scope="col">Acciones</th>
+            <th scope="col"><span class="sr-only">Acciones</span></th>
           </tr>
         </thead>
         <tbody>
           @for (r of ordenadas(); track r.id) {
             <tr>
-              @if (esStaff()) {
-                <td>
-                  {{ r.usuarioNombre }}
-                  <small class="usuario-mail">{{ r.usuarioMail }}</small>
-                </td>
-              }
-              <td>{{ r.servicioNombre }}</td>
-              <td class="num">{{ r.fecha }}</td>
-              <td class="num">{{ hhmm(r.horaInicio) }} – {{ hhmm(r.horaFin) }}</td>
               <td>
-                <span
-                  class="badge"
-                  [class.badge--active]="r.estado === ReservationStatus.ACTIVE"
-                  [class.badge--cancelled]="r.estado === ReservationStatus.CANCELLED"
-                  [class.badge--completed]="r.estado === ReservationStatus.COMPLETED"
-                >
-                  {{ r.estado }}
-                </span>
-                @if (r.motivoCancelacion; as m) {
-                  <small class="motivo">{{ etiquetaMotivo(m) }}</small>
-                }
+                {{ r.usuarioNombre }}
+                <small class="secundario">{{ r.usuarioMail }}</small>
               </td>
+              <td>{{ r.servicioNombre }}</td>
+              <td class="num nowrap">
+                <time [attr.datetime]="r.fecha" [attr.title]="fechaLarga(r.fecha)">{{ fechaCorta(r.fecha) }}</time>
+              </td>
+              <td class="num nowrap">{{ hhmm(r.horaInicio) }} a {{ hhmm(r.horaFin) }}</td>
               <td>
-                @if (confirmandoId() === r.id) {
-                  <div class="cancel-confirm">
-                    <select
-                      aria-label="Motivo de cancelación (opcional)"
-                      [disabled]="cancellingId() === r.id"
-                      (change)="onMotivoChange($event)"
-                    >
-                      <option value="" [selected]="motivo() === null">Prefiero no decirlo</option>
-                      @for (m of MOTIVOS; track m.valor) {
-                        <option [value]="m.valor">{{ m.etiqueta }}</option>
-                      }
-                    </select>
-                    <button
-                      type="button"
-                      class="btn btn--danger"
-                      [disabled]="cancellingId() === r.id"
-                      (click)="confirmarCancelacion(r)"
-                    >
-                      @if (cancellingId() === r.id) {
-                        Cancelando…
-                      } @else {
-                        Confirmar
-                      }
-                    </button>
-                    <button
-                      type="button"
-                      class="btn btn--ghost"
-                      [disabled]="cancellingId() === r.id"
-                      (click)="volver()"
-                    >
-                      Volver
-                    </button>
-                  </div>
-                } @else {
-                  <button
-                    type="button"
-                    class="btn btn--secondary"
-                    [disabled]="!puedeCancelar(r) || cancellingId() !== null"
-                    (click)="iniciarCancelacion(r)"
-                  >
-                    Cancelar
-                  </button>
+                <ng-container [ngTemplateOutlet]="estado" [ngTemplateOutletContext]="{ $implicit: r }" />
+              </td>
+              <td class="acciones">
+                @if (puedeCancelar(r)) {
+                  <ng-container [ngTemplateOutlet]="cancelar" [ngTemplateOutletContext]="{ $implicit: r }" />
                 }
               </td>
             </tr>
@@ -108,5 +63,114 @@
         </tbody>
       </table>
     </div>
+  } @else {
+    <!-- ===== CLIENTE: tarjetas ===== -->
+    <section class="grupo" aria-labelledby="proximas-title">
+      <h2 id="proximas-title" class="grupo__titulo">Próximas</h2>
+      @if (proximas().length === 0) {
+        <div class="state state--empty">
+          <p>No tenés turnos próximos.</p>
+          <a routerLink="/nueva" class="btn btn--primary">Reservar un turno</a>
+        </div>
+      } @else {
+        <ol class="tarjetas">
+          @for (r of proximas(); track r.id) {
+            <li class="card tarjeta">
+              <ng-container [ngTemplateOutlet]="cuerpo" [ngTemplateOutletContext]="{ $implicit: r }" />
+              <div class="tarjeta__acciones">
+                <ng-container [ngTemplateOutlet]="cancelar" [ngTemplateOutletContext]="{ $implicit: r }" />
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    @if (historial().length > 0) {
+      <section class="grupo" aria-labelledby="historial-title">
+        <h2 id="historial-title" class="grupo__titulo">Historial</h2>
+        <ol class="tarjetas">
+          @for (r of historial(); track r.id) {
+            <li class="card tarjeta tarjeta--historial">
+              <ng-container [ngTemplateOutlet]="cuerpo" [ngTemplateOutletContext]="{ $implicit: r, apagado: true }" />
+            </li>
+          }
+        </ol>
+      </section>
+    }
   }
 </section>
+
+<!-- Cuerpo de la tarjeta del cliente: bloque de fecha + horario + servicio + estado -->
+<ng-template #cuerpo let-r let-apagado="apagado">
+  <app-fecha-bloque [fecha]="r.fecha" [apagado]="!!apagado" />
+  <div class="tarjeta__info">
+    <p class="tarjeta__hora num">{{ hhmm(r.horaInicio) }} <span class="secundario-inline">a {{ hhmm(r.horaFin) }}</span></p>
+    <h3 class="tarjeta__servicio">{{ r.servicioNombre }}</h3>
+    @if (apagado) {
+      <ng-container [ngTemplateOutlet]="estado" [ngTemplateOutletContext]="{ $implicit: r }" />
+    }
+  </div>
+</ng-template>
+
+<!-- Badge de estado (+ motivo si la reserva se canceló con uno) -->
+<ng-template #estado let-r>
+  <span
+    class="badge"
+    [class.badge--active]="r.estado === ReservationStatus.ACTIVE"
+    [class.badge--cancelled]="r.estado === ReservationStatus.CANCELLED"
+    [class.badge--completed]="r.estado === ReservationStatus.COMPLETED"
+  >
+    {{ etiquetaEstado(r.estado) }}
+  </span>
+  @if (r.motivoCancelacion; as m) {
+    <small class="secundario">Motivo: {{ etiquetaMotivo(m) }}</small>
+  }
+</ng-template>
+
+<!-- Cancelar con motivo opcional (misma lógica para tabla y tarjetas) -->
+<ng-template #cancelar let-r>
+  @if (confirmandoId() === r.id) {
+    <div class="cancel-confirm">
+      <select
+        aria-label="Motivo de cancelación (opcional)"
+        [disabled]="cancellingId() === r.id"
+        (change)="onMotivoChange($event)"
+      >
+        <option value="" [selected]="motivo() === null">Prefiero no decirlo</option>
+        @for (m of MOTIVOS; track m.valor) {
+          <option [value]="m.valor">{{ m.etiqueta }}</option>
+        }
+      </select>
+      <button
+        type="button"
+        class="btn btn--danger"
+        [disabled]="cancellingId() === r.id"
+        (click)="confirmarCancelacion(r)"
+      >
+        @if (cancellingId() === r.id) {
+          Cancelando…
+        } @else {
+          Confirmar cancelación
+        }
+      </button>
+      <button
+        type="button"
+        class="btn btn--ghost"
+        [disabled]="cancellingId() === r.id"
+        (click)="volver()"
+      >
+        Volver
+      </button>
+    </div>
+  } @else {
+    <button
+      type="button"
+      class="btn btn--secondary"
+      [disabled]="cancellingId() !== null"
+      (click)="iniciarCancelacion(r)"
+    >
+      Cancelar
+    </button>
+  }
+</ng-template>
