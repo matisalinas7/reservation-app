@@ -22,12 +22,16 @@
   gap: var(--space-4);
 }
 
-.admin-filter {
-  margin-bottom: var(--space-4);
+.admin-filtros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
-.admin-filter input {
-  width: auto;
+.admin-filtros__total {
+  margin-bottom: var(--space-3);
 }
 
 .row-actions {
@@ -40,7 +44,12 @@
 }
 
 @media (max-width: 560px) {
-  .field-row {
+  .field-row,
+  .admin-filtros {
     grid-template-columns: 1fr;
+  }
+
+  .admin-filtros__limpiar {
+    justify-self: start;
   }
 }

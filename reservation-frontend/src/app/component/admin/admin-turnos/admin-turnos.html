@@ -39,20 +39,43 @@
     </div>
   </form>
 
-  <div class="field admin-filter">
-    <label for="filtroFecha">Filtrar por fecha</label>
-    <div class="actions">
-      <input
-        id="filtroFecha"
-        type="date"
-        [value]="filtroFecha()"
-        (change)="onFiltroFecha($event)"
-      />
-      @if (filtroFecha()) {
-        <button type="button" class="btn btn--secondary" (click)="filtroFecha.set('')">Limpiar</button>
-      }
+  <section class="admin-filtros" aria-labelledby="filtros-title">
+    <h2 id="filtros-title" class="sr-only">Filtrar turnos</h2>
+    <div class="field">
+      <label for="filtroCategoria">Categoría</label>
+      <select id="filtroCategoria" (change)="onFiltroCategoria($event)">
+        <option value="0" [selected]="filtroCategoria() === 0">Todas</option>
+        @for (c of categorias(); track c.id) {
+          <option [value]="c.id" [selected]="filtroCategoria() === c.id">{{ c.nombre }}</option>
+        }
+      </select>
     </div>
-  </div>
+    <div class="field">
+      <label for="filtroServicio">Servicio</label>
+      <select id="filtroServicio" (change)="onFiltroServicio($event)">
+        <option value="0" [selected]="filtroServicio() === 0">Todos</option>
+        @for (s of serviciosDelFiltro(); track s.id) {
+          <option [value]="s.id" [selected]="filtroServicio() === s.id">{{ s.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtroFecha">Fecha</label>
+      <input id="filtroFecha" type="date" [value]="filtroFecha()" (change)="onFiltroFecha($event)" />
+    </div>
+    @if (hayFiltros()) {
+      <button type="button" class="btn btn--ghost admin-filtros__limpiar" (click)="limpiarFiltros()">
+        Limpiar filtros
+      </button>
+    }
+  </section>
+
+  @if (!loading() && !error()) {
+    <p class="admin-filtros__total text-sm muted" role="status">
+      {{ turnosVisibles().length }} {{ turnosVisibles().length === 1 ? 'turno' : 'turnos' }}
+      {{ hayFiltros() ? 'con estos filtros' : 'en total' }}
+    </p>
+  }
 
   @if (loading()) {
     <p class="state state--loading" role="status">Cargando turnos…</p>
@@ -62,7 +85,14 @@
       <button type="button" class="btn btn--secondary" (click)="cargar()">Reintentar</button>
     </div>
   } @else if (turnosVisibles().length === 0) {
-    <p class="state state--empty">No hay turnos para mostrar.</p>
+    <div class="state state--empty">
+      @if (hayFiltros()) {
+        <p>No hay turnos con estos filtros.</p>
+        <button type="button" class="btn btn--secondary" (click)="limpiarFiltros()">Limpiar filtros</button>
+      } @else {
+        <p>No hay turnos generados.</p>
+      }
+    </div>
   } @else {
     <div class="table-wrap">
       <table class="table">

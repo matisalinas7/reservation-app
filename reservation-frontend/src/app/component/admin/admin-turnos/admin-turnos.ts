@@ -2,7 +2,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminNavComponent } from '../admin-nav/admin-nav';
-import { AdminHorario, AdminServicio, AdminTurno } from '../../../model/admin.model';
+import {
+  AdminCategoria,
+  AdminHorario,
+  AdminServicio,
+  AdminTurno,
+} from '../../../model/admin.model';
 import { AdminService } from '../../../services/admin.service';
 import { ToastService } from '../../../services/toast.service';
 import { formatHttpError } from '../../../utils/http-error.util';
@@ -26,16 +31,52 @@ export class AdminTurnosComponent implements OnInit {
   readonly turnos = signal<AdminTurno[]>([]);
   readonly horarios = signal<AdminHorario[]>([]);
   readonly servicios = signal<AdminServicio[]>([]);
+  readonly categorias = signal<AdminCategoria[]>([]);
   readonly horariosActivos = computed(() => this.horarios().filter((h) => !h.fechaBaja));
 
+  // ---- Filtros de la lista (0 / '' = sin filtro) ----
   readonly filtroFecha = signal('');
-  // Depende de dos signals (turnos y filtroFecha): se recalcula cuando cambia cualquiera
+  readonly filtroCategoria = signal(0);
+  readonly filtroServicio = signal(0);
+  readonly hayFiltros = computed(
+    () => !!this.filtroFecha() || this.filtroCategoria() > 0 || this.filtroServicio() > 0,
+  );
+
+  /** Servicios para el select del filtro: solo los de la categoría elegida (si hay una). */
+  readonly serviciosDelFiltro = computed(() => {
+    const categoriaId = this.filtroCategoria();
+    return categoriaId
+      ? this.servicios().filter((s) => s.categoriaId === categoriaId)
+      : this.servicios();
+  });
+
+  // turno -> horario -> servicio -> categoría. Se arman mapas una vez por cambio de listas,
+  // así el filtro no hace un find() por cada turno.
+  private readonly servicioPorHorario = computed(
+    () => new Map(this.horarios().map((h) => [h.id, h.servicioId])),
+  );
+  private readonly categoriaPorServicio = computed(
+    () => new Map(this.servicios().map((s) => [s.id, s.categoriaId])),
+  );
+
+  // Se recalcula cuando cambia la lista o cualquiera de los filtros
   readonly turnosVisibles = computed(() => {
     const fecha = this.filtroFecha();
-    const lista = fecha ? this.turnos().filter((t) => t.fecha === fecha) : this.turnos();
-    return [...lista].sort((a, b) =>
-      (a.fecha + a.horaInicio).localeCompare(b.fecha + b.horaInicio),
-    );
+    const categoriaId = this.filtroCategoria();
+    const servicioId = this.filtroServicio();
+    const servicioPorHorario = this.servicioPorHorario();
+    const categoriaPorServicio = this.categoriaPorServicio();
+
+    const lista = this.turnos().filter((t) => {
+      if (fecha && t.fecha !== fecha) return false;
+      const sId = servicioPorHorario.get(t.horarioId);
+      if (servicioId && sId !== servicioId) return false;
+      if (categoriaId && (sId === undefined || categoriaPorServicio.get(sId) !== categoriaId)) {
+        return false;
+      }
+      return true;
+    });
+    return lista.sort((a, b) => (a.fecha + a.horaInicio).localeCompare(b.fecha + b.horaInicio));
   });
 
   readonly loading = signal(false);
@@ -60,6 +101,10 @@ export class AdminTurnosComponent implements OnInit {
     });
     this.adminService.getServicios().subscribe({
       next: (data) => this.servicios.set(data),
+      error: (err: HttpErrorResponse) => this.toast.showError(formatHttpError(err)),
+    });
+    this.adminService.getCategorias().subscribe({
+      next: (data) => this.categorias.set(data),
       error: (err: HttpErrorResponse) => this.toast.showError(formatHttpError(err)),
     });
   }
@@ -95,6 +140,26 @@ export class AdminTurnosComponent implements OnInit {
 
   onFiltroFecha(event: Event): void {
     this.filtroFecha.set((event.target as HTMLInputElement).value);
+  }
+
+  onFiltroCategoria(event: Event): void {
+    const categoriaId = Number((event.target as HTMLSelectElement).value);
+    this.filtroCategoria.set(categoriaId);
+    // Si el servicio elegido no es de la nueva categoría, se limpia
+    const servicio = this.servicios().find((s) => s.id === this.filtroServicio());
+    if (categoriaId && servicio && servicio.categoriaId !== categoriaId) {
+      this.filtroServicio.set(0);
+    }
+  }
+
+  onFiltroServicio(event: Event): void {
+    this.filtroServicio.set(Number((event.target as HTMLSelectElement).value));
+  }
+
+  limpiarFiltros(): void {
+    this.filtroFecha.set('');
+    this.filtroCategoria.set(0);
+    this.filtroServicio.set(0);
   }
 
   generar(): void {
